@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2021-03-24T07:02:40.074Z</updated>
+  <updated>2021-03-30T11:14:59.832Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="http://sholck.top/archives/8a2ade17.html"/>
     <id>http://sholck.top/archives/8a2ade17.html</id>
     <published>2021-03-09T14:00:00.000Z</published>
-    <updated>2021-03-24T07:02:40.074Z</updated>
+    <updated>2021-03-30T11:14:59.832Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;下面是一些生产力工具&lt;/p&gt;
@@ -136,21 +136,50 @@ camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针�
   </entry>
   
   <entry>
+    <title>Camx-Feature2-featureInstanceConnect</title>
+    <link href="http://sholck.top/archives/8a2ade19.html"/>
+    <id>http://sholck.top/archives/8a2ade19.html</id>
+    <published>2020-03-30T10:53:00.000Z</published>
+    <updated>2021-03-30T11:08:29.792Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Camx-Feature2-featureInstanceConnect&quot;&gt;&lt;a href=&quot;#Camx-Feature2-featureInstanceConnect&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
+    
+    
+    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
+    
+    <category term="Feature2" scheme="http://sholck.top/tags/Feature2/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Camx-Feature2</title>
     <link href="http://sholck.top/archives/8a2ade18.html"/>
     <id>http://sholck.top/archives/8a2ade18.html</id>
     <published>2020-03-23T17:03:00.000Z</published>
-    <updated>2021-03-24T07:02:40.074Z</updated>
+    <updated>2021-03-30T11:10:08.060Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Feature2&quot;&gt;&lt;a href=&quot;#Feature2&quot; class=&quot;headerlink&quot; title=&quot;Feature2&quot;&gt;&lt;/a&gt;Feature2&lt;/h1&gt;&lt;p&gt;当我们想要去实现特定功能的时候，我们需要使用FGM管理实现feature功能的各类组件 并根据feature拓扑创建对应的pipeline去实现，这些组件包括FGS,FPM,线程池，TBM。本篇文章将从feature组件的创建以及各组件的功能组合如何实现特定feature来描述，而关联&lt;a href=&quot;https://sholck.top/archives/8a2ade15.html&quot;&gt;底层的pipeline建立和node处理&lt;/a&gt;，&lt;a href=&quot;https://sholck.top/archives/8a2ade14.html&quot;&gt;PCR逻辑&lt;/a&gt;已经在其他文章详细描述，本文不再重新描述。&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;feature2框架介绍&lt;/li&gt;
-&lt;li&gt;configure_stream&lt;/li&gt;
-&lt;li&gt;callback&lt;/li&gt;
-&lt;li&gt;TBM详解&lt;/li&gt;
-&lt;li&gt;TM详解&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;feature2框架介绍&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;configure_stream&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;feature instance connect&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;callback&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;TBM详解&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;TM详解&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
+&lt;p&gt;&lt;a id=&quot;1&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;feature2框架介绍&quot;&gt;&lt;a href=&quot;#feature2框架介绍&quot; class=&quot;headerlink&quot; title=&quot;feature2框架介绍&quot;&gt;&lt;/a&gt;feature2框架介绍&lt;/h2&gt;&lt;p&gt;下图feature2大致的组件框架。&lt;/p&gt;
 &lt;p&gt;&lt;img src=&quot;/images/feature2/feature2-frame.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;</summary>
     
