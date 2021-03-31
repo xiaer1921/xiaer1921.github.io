@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2021-03-30T11:14:59.832Z</updated>
+  <updated>2021-03-31T14:30:51.280Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -21,7 +21,38 @@
     <link href="http://sholck.top/archives/8a2ade17.html"/>
     <id>http://sholck.top/archives/8a2ade17.html</id>
     <published>2021-03-09T14:00:00.000Z</published>
-    <updated>2021-03-30T11:14:59.832Z</updated>
+    <updated>2021-03-31T14:30:51.280Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;下面是一些生产力工具&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Hexo&lt;/li&gt;
+&lt;li&gt;draw.io&lt;/li&gt;
+&lt;li&gt;vim/tmux/cscope/ctags/fzf/taglist/ag&lt;/li&gt;
+&lt;li&gt;HHKB types&lt;/li&gt;
+&lt;/ul&gt;</summary>
+    
+    
+    
+    <category term="生产力工具" scheme="http://sholck.top/categories/%E7%94%9F%E4%BA%A7%E5%8A%9B%E5%B7%A5%E5%85%B7/"/>
+    
+    
+    <category term="vim" scheme="http://sholck.top/tags/vim/"/>
+    
+    <category term="hexo" scheme="http://sholck.top/tags/hexo/"/>
+    
+    <category term="draw.io" scheme="http://sholck.top/tags/draw-io/"/>
+    
+    <category term="fzf" scheme="http://sholck.top/tags/fzf/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>生产力工具记录</title>
+    <link href="http://sholck.top/archives/8a2ade17.html"/>
+    <id>http://sholck.top/archives/8a2ade17.html</id>
+    <published>2021-03-09T14:00:00.000Z</published>
+    <updated>2021-03-31T14:30:27.340Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;下面是一些生产力工具&lt;/p&gt;
@@ -52,7 +83,34 @@
     <link href="http://sholck.top/archives/8a2ade16.html"/>
     <id>http://sholck.top/archives/8a2ade16.html</id>
     <published>2021-03-08T15:11:00.000Z</published>
-    <updated>2021-03-24T07:02:40.074Z</updated>
+    <updated>2021-03-31T14:30:51.280Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;session-flush-timeout学习&quot;&gt;&lt;a href=&quot;#session-flush-timeout学习&quot; class=&quot;headerlink&quot; title=&quot;session flush timeout学习&quot;&gt;&lt;/a&gt;session flush timeout学习&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;背景&lt;/li&gt;
+&lt;li&gt;超时处理流程&lt;/li&gt;
+&lt;li&gt;Condition处理&lt;/li&gt;
+&lt;li&gt;扩展&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;之前做过的mtkcam或者camx,都有对timeout进行调整的处理。当前碰到一个拍照没有图片返回的案例，故对这个案例进行分析。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
+    
+    
+    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
+    
+    <category term="flush" scheme="http://sholck.top/tags/flush/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>session flush timeout学习</title>
+    <link href="http://sholck.top/archives/8a2ade16.html"/>
+    <id>http://sholck.top/archives/8a2ade16.html</id>
+    <published>2021-03-08T15:11:00.000Z</published>
+    <updated>2021-03-31T14:30:27.340Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;session-flush-timeout学习&quot;&gt;&lt;a href=&quot;#session-flush-timeout学习&quot; class=&quot;headerlink&quot; title=&quot;session flush timeout学习&quot;&gt;&lt;/a&gt;session flush timeout学习&lt;/h1&gt;&lt;ul&gt;
@@ -79,7 +137,37 @@
     <link href="http://sholck.top/archives/8a2ade15.html"/>
     <id>http://sholck.top/archives/8a2ade15.html</id>
     <published>2020-11-03T07:26:29.000Z</published>
-    <updated>2021-03-24T07:02:40.074Z</updated>
+    <updated>2021-03-31T14:30:51.280Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;单-amp-双摄configure-stream流程&quot;&gt;&lt;a href=&quot;#单-amp-双摄configure-stream流程&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄configure stream流程&quot;&gt;&lt;/a&gt;单&amp;amp;双摄configure stream流程&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;advance/feature2&lt;/li&gt;
+&lt;li&gt;hal3 callback chi&lt;/li&gt;
+&lt;li&gt;单摄usecase初始化处理&lt;/li&gt;
+&lt;li&gt;双摄usecase初始化处理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&quot;advance-feature2&quot;&gt;&lt;a href=&quot;#advance-feature2&quot; class=&quot;headerlink&quot; title=&quot;advance/feature2&quot;&gt;&lt;/a&gt;advance/feature2&lt;/h2&gt;&lt;p&gt;为什么起名为advance(提前)，代码架构直观可以发现一部分pipeline和node在FGM的pipeline和node之前创建。因此整个configure_stream大体上其实可以分为两个流程。&lt;br&gt;1.在SelectUsecaseConfig之后直接通过CameraUsecaseBase::Initialize去CreatePipeline的部分，这部分属于advance&lt;br&gt;2.PostUsecaseCreation去创建FGM,FGS,拿到FGD map,创建FPM，拿到全部feature instance的cap.之后对需要的每一个feature instance去initizlize,configure，最终创建pipeline，状态机成为Finalized.  &lt;/p&gt;
+&lt;p&gt;因此，把advance/feature2这部分放在首节，本文只针对advance 和 usecasemc部分描述，尽量不涉及feature部分&lt;/p&gt;
+&lt;h2 id=&quot;hal3-callback-chi&quot;&gt;&lt;a href=&quot;#hal3-callback-chi&quot; class=&quot;headerlink&quot; title=&quot;hal3 callback chi&quot;&gt;&lt;/a&gt;hal3 callback chi&lt;/h2&gt;&lt;p&gt;configure_stream 和process_capture_request 都是framework下发，通过hal3处理，callback chi。process_capture_results则是由camx node 在PCR处理中主动callback.&lt;br&gt;process_capture_request 和 process_capture_result见双摄预览控制流程详解。&lt;/p&gt;
+&lt;p&gt;configure_stream入口为camxhal3entry.cpp,通过pHAL3-&amp;gt;configure_streams进入hal3处理，hal3中调用pHALDevice-&amp;gt;ConfigureStreams，在HALDevice::ConfigureStreams中主要进行三个处理.&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
+    
+    
+    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
+    
+    <category term="configure_stream" scheme="http://sholck.top/tags/configure-stream/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>单&amp;双摄configure stream流程</title>
+    <link href="http://sholck.top/archives/8a2ade15.html"/>
+    <id>http://sholck.top/archives/8a2ade15.html</id>
+    <published>2020-11-03T07:26:29.000Z</published>
+    <updated>2021-03-31T14:30:27.340Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;单-amp-双摄configure-stream流程&quot;&gt;&lt;a href=&quot;#单-amp-双摄configure-stream流程&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄configure stream流程&quot;&gt;&lt;/a&gt;单&amp;amp;双摄configure stream流程&lt;/h1&gt;&lt;ul&gt;
@@ -109,7 +197,38 @@
     <link href="http://sholck.top/archives/8a2ade14.html"/>
     <id>http://sholck.top/archives/8a2ade14.html</id>
     <published>2020-10-25T09:09:51.000Z</published>
-    <updated>2021-03-24T07:02:40.078Z</updated>
+    <updated>2021-03-31T14:30:51.280Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;单-amp-双摄预览控制流详解&quot;&gt;&lt;a href=&quot;#单-amp-双摄预览控制流详解&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄预览控制流详解&quot;&gt;&lt;/a&gt;单&amp;amp;双摄预览控制流详解&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt; Request从hal3到chi&lt;/li&gt;
+&lt;li&gt; chi端request双摄处理流程&lt;/li&gt;
+&lt;li&gt; camx端request双摄处理流程&lt;/li&gt;
+&lt;li&gt; Result返回&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;下图是PCR下发在hal3，chi，camx之间的简单流程(需要重新check双摄usecase和advance,Feature的关系，图中并不包括文中描述的Result返回部分)&lt;br&gt;&lt;img src=&quot;/images/PCR-hal-chi-camx.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;Request从hal3到chi&quot;&gt;&lt;a href=&quot;#Request从hal3到chi&quot; class=&quot;headerlink&quot; title=&quot;Request从hal3到chi&quot;&gt;&lt;/a&gt;Request从hal3到chi&lt;/h2&gt;&lt;html&gt;
+camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针接口进行赋值，其中的configure_streams和process_capture_request分别是进行配流和预览时进行调用的。</summary>
+    
+    
+    
+    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
+    
+    
+    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
+    
+    <category term="PCR" scheme="http://sholck.top/tags/PCR/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>单&amp;双摄预览控制流详解</title>
+    <link href="http://sholck.top/archives/8a2ade14.html"/>
+    <id>http://sholck.top/archives/8a2ade14.html</id>
+    <published>2020-10-25T09:09:51.000Z</published>
+    <updated>2021-03-31T14:30:27.340Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;单-amp-双摄预览控制流详解&quot;&gt;&lt;a href=&quot;#单-amp-双摄预览控制流详解&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄预览控制流详解&quot;&gt;&lt;/a&gt;单&amp;amp;双摄预览控制流详解&lt;/h1&gt;&lt;ul&gt;
@@ -140,7 +259,7 @@ camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针�
     <link href="http://sholck.top/archives/8a2ade19.html"/>
     <id>http://sholck.top/archives/8a2ade19.html</id>
     <published>2020-03-30T10:53:00.000Z</published>
-    <updated>2021-03-31T07:40:25.288Z</updated>
+    <updated>2021-03-31T14:30:51.280Z</updated>
     
     
       
@@ -163,11 +282,68 @@ camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针�
   </entry>
   
   <entry>
+    <title>Camx-Feature2-featureInstanceConnect</title>
+    <link href="http://sholck.top/archives/8a2ade19.html"/>
+    <id>http://sholck.top/archives/8a2ade19.html</id>
+    <published>2020-03-30T10:53:00.000Z</published>
+    <updated>2021-03-31T14:30:27.340Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;Camx-Feature2-featureInstanceConnect&quot;&gt;&lt;a href=&quot;#Camx-Feature2-featureInstanceConnect&quot; class=&quot;headerlink&quot; title=&quot;Camx-Feature2-featureInstanceConnect&quot;&gt;&lt;/a&gt;Camx-Feature2-featureInstanceConnect&lt;/h1&gt;&lt;p&gt;在这小节中，我们会对feature graph的整合和feature instance之间的连接有个大致的了解&lt;/p&gt;
+&lt;p&gt;从之前GetAllFeatureGraphDescriptors中过滤掉一部分的featureGraphDesc，剩下的按照组合规则构成VirtualSuperGraph，那么具体各feature之间的连接顺序和规则是通过什么来确定的?&lt;/p&gt;
+&lt;p&gt;下面是sm4350当前预览的feature 拓扑详细的描述了之间的连接&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/feature2/feature2-featureInstanceConnect.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
+    
+    
+    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
+    
+    <category term="Feature2" scheme="http://sholck.top/tags/Feature2/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Camx-Feature2</title>
     <link href="http://sholck.top/archives/8a2ade18.html"/>
     <id>http://sholck.top/archives/8a2ade18.html</id>
     <published>2020-03-23T17:03:00.000Z</published>
-    <updated>2021-03-31T07:55:37.436Z</updated>
+    <updated>2021-03-31T14:30:51.280Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;Feature2&quot;&gt;&lt;a href=&quot;#Feature2&quot; class=&quot;headerlink&quot; title=&quot;Feature2&quot;&gt;&lt;/a&gt;Feature2&lt;/h1&gt;&lt;p&gt;当我们想要去实现特定功能的时候，我们需要使用FGM管理实现feature功能的各类组件 并根据feature拓扑创建对应的pipeline去实现，这些组件包括FGS,FPM,线程池，TBM。本篇文章将从feature组件的创建以及各组件的功能组合如何实现特定feature来描述，而关联&lt;a href=&quot;https://sholck.top/archives/8a2ade15.html&quot;&gt;底层的pipeline建立和node处理&lt;/a&gt;，&lt;a href=&quot;https://sholck.top/archives/8a2ade14.html&quot;&gt;PCR逻辑&lt;/a&gt;已经在其他文章详细描述，本文不再重新描述。&lt;/p&gt;
+&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;feature2框架介绍&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;configure_stream&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;feature instance connect&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;callback&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;TBM详解&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;TM详解&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a id=&quot;1&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;feature2框架介绍&quot;&gt;&lt;a href=&quot;#feature2框架介绍&quot; class=&quot;headerlink&quot; title=&quot;feature2框架介绍&quot;&gt;&lt;/a&gt;feature2框架介绍&lt;/h2&gt;&lt;p&gt;下图feature2大致的组件框架。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/feature2/feature2-frame.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
+    
+    
+    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
+    
+    <category term="Feature2" scheme="http://sholck.top/tags/Feature2/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Camx-Feature2</title>
+    <link href="http://sholck.top/archives/8a2ade18.html"/>
+    <id>http://sholck.top/archives/8a2ade18.html</id>
+    <published>2020-03-23T17:03:00.000Z</published>
+    <updated>2021-03-31T14:30:27.340Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Feature2&quot;&gt;&lt;a href=&quot;#Feature2&quot; class=&quot;headerlink&quot; title=&quot;Feature2&quot;&gt;&lt;/a&gt;Feature2&lt;/h1&gt;&lt;p&gt;当我们想要去实现特定功能的时候，我们需要使用FGM管理实现feature功能的各类组件 并根据feature拓扑创建对应的pipeline去实现，这些组件包括FGS,FPM,线程池，TBM。本篇文章将从feature组件的创建以及各组件的功能组合如何实现特定feature来描述，而关联&lt;a href=&quot;https://sholck.top/archives/8a2ade15.html&quot;&gt;底层的pipeline建立和node处理&lt;/a&gt;，&lt;a href=&quot;https://sholck.top/archives/8a2ade14.html&quot;&gt;PCR逻辑&lt;/a&gt;已经在其他文章详细描述，本文不再重新描述。&lt;/p&gt;
