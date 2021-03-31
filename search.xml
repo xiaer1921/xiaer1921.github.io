@@ -4,6 +4,7 @@
     <title>Camx-Feature2</title>
     <url>/archives/8a2ade18.html</url>
     <content><![CDATA[<h1 id="Feature2"><a href="#Feature2" class="headerlink" title="Feature2"></a>Feature2</h1><p>当我们想要去实现特定功能的时候，我们需要使用FGM管理实现feature功能的各类组件 并根据feature拓扑创建对应的pipeline去实现，这些组件包括FGS,FPM,线程池，TBM。本篇文章将从feature组件的创建以及各组件的功能组合如何实现特定feature来描述，而关联<a href="https://sholck.top/archives/8a2ade15.html">底层的pipeline建立和node处理</a>，<a href="https://sholck.top/archives/8a2ade14.html">PCR逻辑</a>已经在其他文章详细描述，本文不再重新描述。</p>
+<p><a id="0"></a></p>
 <ul>
 <li><a href="#1">feature2框架介绍</a></li>
 <li><a href="#2">configure_stream</a></li>
@@ -36,7 +37,10 @@
 <li>针对单双摄设置Fk stream,双摄额外设置主辅摄的internalInputStream，包括RDI和FD，这两个stream已经在mc usecase申请资源CreateMultiCameraResource中空间申请并填充。</li>
 <li>Feature2Wrapper初始化<br>a. m_internalInputStreamMap  映射usecase内部的output stream到feature内部external stream,比如双摄的RDI stream<br>b. m_pFrameworkStreams 管理fk stream</li>
 </ol>
-<h3 id="FGM和TBM的创建"><a href="#FGM和TBM的创建" class="headerlink" title="FGM和TBM的创建"></a>FGM和TBM的创建</h3><h4 id="FGM创建"><a href="#FGM创建" class="headerlink" title="FGM创建"></a>FGM创建</h4><ol>
+<h3 id="FGM和TBM的创建"><a href="#FGM和TBM的创建" class="headerlink" title="FGM和TBM的创建"></a>FGM和TBM的创建</h3><ul>
+<li><a href="#0">返回主目录</a></li>
+</ul>
+<h4 id="FGM创建"><a href="#FGM创建" class="headerlink" title="FGM创建"></a>FGM创建</h4><ol>
 <li>设置该feature2wrapper的cb，用来处理PCR的处理</li>
 <li>feature 的input stream指针空间单独copy，CloneStreamConfig申请空间过大，需check 并告知qcom</li>
 <li>设置该FGMd的cb，处理chi的notify和feature的message</li>
@@ -146,12 +150,14 @@
 
 <h5 id="Feature-Instance整合"><a href="#Feature-Instance整合" class="headerlink" title="Feature Instance整合"></a>Feature Instance整合</h5><p>该整合为所匹配到的graph下的所有fature instance, extSrcLinks，extSinkLinks,internalLinks的整合</p>
 <ol>
-<li>CreateVirtualSuperGraph创建，通过MergeFeatureGraphs进行整合，单摄命名为VirtualSuperGraph，双摄命名为MultiCameraVirtualSuperGraph，整合规则暂时不深入研究<br>整合完毕的feature instance打印如下：</li>
+<li>CreateVirtualSuperGraph创建，通过MergeFeatureGraphs进行整合，单摄命名为VirtualSuperGraph，双摄命名为MultiCameraVirtualSuperGraph，整合规则即feature instance和links的合并，见feature instance connect小节理解<br>整合完毕的feature instance打印如下：</li>
 </ol>
 <figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">CreateFeatureInstances</span>() <span class="selector-pseudo">:VirtualSuperGraph</span>, <span class="selector-tag">numFeatureInstances</span><span class="selector-pseudo">:7</span>, <span class="selector-tag">logicalCameraId</span><span class="selector-pseudo">:0</span></span><br></pre></td></tr></table></figure>
 
 <p>到目前为止，我们已经拿到了全部我们需要的feature instance，links规则,之后通过FPM去管理。</p>
-<h5 id="feature-instance-create–-gt-Finalized"><a href="#feature-instance-create–-gt-Finalized" class="headerlink" title="feature instance create–&gt;Finalized"></a>feature instance create–&gt;Finalized</h5><p>下面是一份详细的流程处理</p>
+<h5 id="feature-instance-create–-gt-Finalized"><a href="#feature-instance-create–-gt-Finalized" class="headerlink" title="feature instance create–&gt;Finalized"></a>feature instance create–&gt;Finalized</h5><ul>
+<li><a href="#0">返回主目录</a><br>下面是一份详细的流程处理</li>
+</ul>
 <p><img src="/images/feature2/feature2-configure-finalize.png" alt="alt"></p>
 <h5 id="feature-instace-create"><a href="#feature-instace-create" class="headerlink" title="feature instace create"></a>feature instace create</h5><p>这部分主要由CreateFeatureInstances去实现<br>遍历virtualGraph的成员feature instance,下面以RealTime去描述</p>
 <figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line"><span class="number">1.</span> DoStreamNegotiation 将feature instance name去和m_featureVersionToOpsMap(包含instance对应的hook Ops)match,然后进行stramNegotiation.</span><br><span class="line"></span><br><span class="line">chifeature2featurepool.cpp:<span class="number">217</span> DoStreamNegotiation() feature:RealTime, pStreamNegotiation:<span class="number">0x736685b998</span>K</span><br><span class="line"></span><br><span class="line">假如为ZSL snapshot negotiation,</span><br><span class="line">    a. clone RDI stream，这个RDI stream定义在chifeature2utils.h，</span><br><span class="line">    b. 通过GetSensorOutputDimension去获取RDI stream的witdh,high,bpp，方便设置格式,默认bpp为<span class="number">10</span>,那么格式为RAW10</span><br><span class="line">    c. MapStreamPerFeature对feature input stream(fk stream/RDI+FD)进行流类型判定，并添加对应的ChiFeature2Type映射。</span><br><span class="line">    </span><br><span class="line"> chifeature2utils.cpp:<span class="number">339</span> MapStreamPerFeature() Enter :numStreams:<span class="number">2</span>                                                                                       </span><br><span class="line"> chifeature2utils.cpp:<span class="number">351</span> MapStreamPerFeature() Classify: <span class="number">0xb400007402c56488</span> format: <span class="number">34</span> width: <span class="number">1440</span> height: <span class="number">1080</span> gralloc:<span class="number">0x900</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">357</span> MapStreamPerFeature() Identified Preview</span><br><span class="line"> chifeature2utils.cpp:<span class="number">351</span> MapStreamPerFeature() Classify: <span class="number">0xb400007402c81c48</span> format: <span class="number">33</span> width: <span class="number">4160</span> height: <span class="number">3120</span> gralloc:<span class="number">0x3</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">417</span> MapStreamPerFeature() Identified JPEG</span><br><span class="line"> chifeature2utils.cpp:<span class="number">457</span> MapStreamPerFeature() Map Streams Scan:</span><br><span class="line"> chifeature2utils.cpp:<span class="number">458</span> MapStreamPerFeature()     numPreview: <span class="number">1</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">459</span> MapStreamPerFeature()     numVideo: <span class="number">0</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">460</span> MapStreamPerFeature()     numAllYUV: <span class="number">0</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">461</span> MapStreamPerFeature()     num4kYUV: <span class="number">0</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">462</span> MapStreamPerFeature()     numJPEG: <span class="number">1</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">463</span> MapStreamPerFeature()     numRAW: <span class="number">0</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">464</span> MapStreamPerFeature()     numZSL: <span class="number">0</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">465</span> MapStreamPerFeature()     ThumbnailYUV: <span class="number">0</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">466</span> MapStreamPerFeature()     numB2YOut: <span class="number">1</span></span><br><span class="line"> chifeature2utils.cpp:<span class="number">603</span> MapStreamPerFeature() Final classification: Stream:<span class="number">0xb400007402c56488</span> feature:<span class="number">0</span> format: <span class="number">34</span> width: <span class="number">1440</span> height: <span class="number">1080</span> gralloc: <span class="number">0x900</span></span><br><span class="line"></span><br><span class="line"><span class="number">2.</span>通过对流类型判断，根据streamIntent去clone对应类型的stream,如果没有该streamIntent(CHI_STREAM_INTENT_POSTVIEW)的stream，那么按照chifeature2utils.h设置的PostViewStreamsOutput来clone.</span><br><span class="line"></span><br><span class="line">DoStreamNegotiation() <span class="number">0</span></span><br><span class="line">DoStreamNegotiation() Accepting_Streams_REALTIME Stream Stream:<span class="number">0xb400007402c56488</span> Format: <span class="number">34</span> width: <span class="number">1440</span> height: <span class="number">1080</span> gralloc: <span class="number">0x900</span></span><br><span class="line">DoStreamNegotiation() <span class="number">1</span></span><br><span class="line">DoStreamNegotiation() Rejecting_Streams_REALTIME Stream Stream:<span class="number">0xb400007402c81c48</span> Format: <span class="number">33</span> width: <span class="number">4160</span> height: <span class="number">3120</span> gralloc: <span class="number">0x3</span></span><br><span class="line">DoStreamNegotiation() Cloning Video Stream</span><br><span class="line">DoStreamNegotiation() numStream:<span class="number">6</span>    &lt;&lt;可见协商该feature instance 的<span class="keyword">out</span> stream为<span class="number">6</span>条</span><br><span class="line"></span><br><span class="line">这<span class="number">6</span>条应该是preview,postview,RDI,IdeaRaw,video,yuv(部分平台为fd),之后可以通过ClassifyStream 函数log中的streamIntent来判断</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span> 通过UpdateInstancePropsInGraphDesc更新feature instance和links(针对多摄feature instance ).</span><br><span class="line"></span><br></pre></td></tr></table></figure>
@@ -174,10 +180,22 @@
 <figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">chifeature2wrapper.cpp:1804 CreateTargetBufferManagers() Framework Target Buffer Manager [<span class="string">FWK_34_TBM</span>][<span class="symbol">0xb400007472c8e1f0</span>] created. stream=0xb400007402c56488 type=0 format=34</span><br><span class="line"></span><br><span class="line">chifeature2wrapper.cpp:1804 CreateTargetBufferManagers() Framework Target Buffer Manager [<span class="string">FWK_33_TBM</span>][<span class="symbol">0xb400007472c99730</span>] created. stream=0xb400007402c81c48 type=0 format=33</span><br><span class="line"></span><br><span class="line">chifeature2wrapper.cpp:1842 CreateTargetBufferManagers() Wrapper meta target buffer created 0xb400007472cdaaf0 ,physicalCamIdx:0 </span><br></pre></td></tr></table></figure>
 
 <p><a id="3"></a></p>
-<h3 id="feature-instance-connect"><a href="#feature-instance-connect" class="headerlink" title="feature instance connect"></a>feature instance connect</h3><p><a id="4"></a></p>
-<h3 id="callback"><a href="#callback" class="headerlink" title="callback"></a>callback</h3><p><a id="5"></a></p>
-<h3 id="TBM详解"><a href="#TBM详解" class="headerlink" title="TBM详解"></a>TBM详解</h3><p><a id="6"></a></p>
-<h3 id="TM详解"><a href="#TM详解" class="headerlink" title="TM详解"></a>TM详解</h3>]]></content>
+<h3 id="feature-instance-connect"><a href="#feature-instance-connect" class="headerlink" title="feature instance connect"></a>feature instance connect</h3><ul>
+<li><a href="#0">返回主目录</a><br><a href="https://sholck.top/archives/8a2ade19.html">feature instance connect</a></li>
+</ul>
+<p><a id="4"></a></p>
+<h3 id="callback"><a href="#callback" class="headerlink" title="callback"></a>callback</h3><ul>
+<li><a href="#0">返回主目录</a></li>
+</ul>
+<p><a id="5"></a></p>
+<h3 id="TBM详解"><a href="#TBM详解" class="headerlink" title="TBM详解"></a>TBM详解</h3><ul>
+<li><a href="#0">返回主目录</a></li>
+</ul>
+<p><a id="6"></a></p>
+<h3 id="TM详解"><a href="#TM详解" class="headerlink" title="TM详解"></a>TM详解</h3><ul>
+<li><a href="#0">返回主目录</a></li>
+</ul>
+]]></content>
       <categories>
         <category>Camera-Driver</category>
       </categories>
@@ -207,6 +225,7 @@ Insert single graph:cameraID 0-&gt;RTRawHDRBayer2YUVJPEGOEM-&gt;0
 Insert single graph:cameraID 0-&gt;RTRawHDRBayer2YUVOEM-&gt;0
 Insert single graph:cameraID 0-&gt;RTBayer2YUVCDS-&gt;0</code></pre>
 </details>
+根据Internal links和Sink links画出拓扑
 
 <details>
   <summary>确定VirtualSuperGraph下包含的feature instance</summary>
@@ -312,7 +331,69 @@ operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x0
 operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0</code></pre>
 </details>
 
+<details>
+  <summary>获取feature instance的pipeline</summary>
 
+<pre><code>//pipeline的选择：一个session下的pipeline id有很多都是一致的，因此当通过OnPipelineSelect选择一个最基础的成功以后，那么之后的都认为是Session has pipeline
+PrepareFeatureData() Feature2Mapping: FeatureName = JPEG, numSessions = 1, numPipelines = 2 numPorts = 12
+PrepareFeatureData() session: 0, name: JPEG, pipeline: 0, name: InternalZSLYuv2Jpeg
+PrepareFeatureData() Feature2Mapping: FeatureName = HDR, numSessions = 1, numPipelines = 4 numPorts = 28
+PrepareFeatureData() session: 0, name: HDRT1, pipeline: 0, name: Merge3YuvCustomTo1Yuv
+PrepareFeatureData() Feature2Mapping: FeatureName = Bayer2Yuv, numSessions = 1, numPipelines = 9 numPorts = 54 //CDS instance 8
+PrepareFeatureData() session: 0, name: Bayer2Yuv, pipeline: 0, name: ZSLSnapshotYUVHALwithCDS
+PrepareFeatureData() Feature2Mapping: FeatureName = Bayer2Yuv, numSessions = 1, numPipelines = 9 numPorts = 54
+PrepareFeatureData() session: 0, name: Bayer2Yuv, pipeline: 0, name: ZSLSnapshotYUVHAL
+PrepareFeatureData() Feature2Mapping: FeatureName = RawHDR, numSessions = 1, numPipelines = 1 numPorts = 7
+PrepareFeatureData() session: 0, name: RawHDR, pipeline: 0, name: SWMFMergeRaw
+PrepareFeatureData() Feature2Mapping: FeatureName = RealTime, numSessions = 1, numPipelines = 14 numPorts = 280
+PrepareFeatureData() session: 0, name: RealTime, pipeline: 0, name: ZSLPreviewRaw_LT1080p</code></pre>
+</details>
+针对部分feature instance，在进行pipeline拓扑优化时会有log，我们可以根据log推出大致拓扑prune结构和为什么disable部分portData中的端口，比如InternalZSLYuv2Jpeg,但是图中的HEIC_BLOB是不会配流的，因为和jpeg feature instance 的output stream不匹配
+
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">PruneUsecaseDescriptor</span>() InternalZSLYuv<span class="number">2</span>Jpeg Pruned Source target srcTargetIdx:<span class="number">0</span>, TARGET_BUFFER_CUSTOM_YUV numOfPort:<span class="number">1</span> portInfo:<span class="number">15</span>,<span class="number">0</span>,<span class="number">0</span></span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">2</span>)-&gt;DestNode(<span class="number">2</span>,<span class="number">2</span>,<span class="number">0</span>)</span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">15</span>,<span class="number">0</span>,<span class="number">2</span>)-&gt;DestNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">0</span>)</span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">15</span>,<span class="number">0</span>,<span class="number">3</span>)-&gt;DestNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<p><img src="/images/feature2/pipeline-InternalZSLYuv2Jpeg.png" alt="alt"></p>
+<details>
+  <summary>给Usecase中的pipeline和PortData匹配以后的Target配流,log中包含result stream和 target stream</summary>
+
+<pre><code>//jpeg feature instance
+Jpeg_0 pushing inStream [0xb4000073e2c932c0 4160x3120] outStream [0xb400007402c81c48 4160x3120]
+
+//inStream
+InitializeTargetStream() JPEG: Target:TARGET_BUFFER_CUSTOM_YUV, PortKey:YUV_In:0:0:0:1 stream:target:0xb4000073e2c96c80:0xb4000073e2c932c0 Stream: 4160 X 3120:0x23:1:0x20022:7
+//outStream
+InitializeTargetStream() JPEG: Target:TARGET_BUFFER_SNAPSHOT, PortKey:JPEG_Out:0:0:0:3 stream:target:0xb4000073e2c8d520:0xb400007402c81c48 Stream: 4160 X 3120:0x21:0:0x3:2
+
+//HDR feature instance
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV_OUT, PortKey:YUV_Out_External:0:0:0:3 stream:target:0xb4000073e2c8c4f0: 0xb4000073e2c95160 Stream: 4160 X 3120:0x23:0:0x20022:2
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV0, PortKey:YUV_In1_Internal:0:0:1:0 stream:target:0xb4000073e2c93cd0:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV1, PortKey:YUV_In0_External:0:0:0:1 stream:target:0xb4000073e2c94590:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV2, PortKey:YUV_In3_Internal:0:0:3:0 stream:target:0xb4000073e2c942f0:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
+
+//bayer2yuv CDS
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL, PortKey:YUV_Out:0:0:0:3 stream:target:0xb4000073e2c92840:0xb4000073e2c8d130 Stream: 4160 X 3120:0x23:0:0x0:2
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL2, PortKey:YUV_Out3:0:0:3:3 stream:target:0xb4000073e2c947c0:0xb4000073e2c97230 Stream: 4160 X 3120:0x23:0:0x0:7
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_RAW, PortKey:RDI_In:0:0:0:1 stream:target:0xb4000073e2c98260:0xb4000073e2c96dd0 Stream: 4208 X3120:0x25:1:0x20022:7
+
+//bayer2yuv
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL, PortKey:YUV_Out:0:0:0:3 stream:target:0xb4000073e2c967b0:0xb000073e2c933a0 Stream: 4160 X 3120:0x23:0:0x0:2
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL2, PortKey:YUV_Out3:0:0:3:3 stream:target:0xb4000073e2c96f90:0xb4000073e2c959b0 Stream: 4160 X 3120:0x23:0:0x0:7
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL3, PortKey:YUV_Out2:0:0:2:3 stream:target:0xb4000073e2c97460:0xb4000073e2c97e70 Stream: 4160 X 3120:0x23:0:0x0:7
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_RAW, PortKey:RDI_In:0:0:0:1 stream:target:0xb4000073e2c950f0:0xb4000073e2c95400 Stream: 4208 X3120:0x25:1:0x20022:7
+
+//RAWHDR feature instance
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_OUT, PortKey:RAW_Out_External:0:0:0:3 stream:target:0xb4000073e2c96c10:0xb4000073e2c979a0 Stream: 4208 X 3120:0x25:0:0x0:2
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN0, PortKey:RAW_In0_External:0:0:0:1  stream:target:0xb4000073e2c920d0:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN1, PortKey:RAW_In2_Internal:0:0:2:0 stream:target:0xb4000073e2c96120:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN2, PortKey:RAW_In3_Internal:0:0:3:0 stream:target:0xb4000073e2c96eb0:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
+
+//RealTime feature instance
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_DISPLAY, PortKey:Display_Out:0:0:0:3 stream:target:0xb4000073e2c91110:0xb400007402c56488 Stream: 1440 X 1080:0x22:0:0x900:1
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_VIDEO, PortKey:Video_Out:0:0:3:3 stream:target:0xb4000073e2c92680:0xb4000073e2c95630 Stream: 1440 X 1080:0x23:0:0x0:3
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_RAW_OUT, PortKey:Raw_Out:0:0:1:3 stream:target:0xb4000073e2c926f0:0xb4000073e2c96580 Stream: 4208 X 3120:0x25:0:0x20002:8 
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_IDEAL_RAW, PortKey:IDEALRaw_Out:0:0:14:3 stream:target:0xb4000073e2c93870:0xb4000073e2c95780 Stream: 4096 X 3072:0x20:0:0x20002:2
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_POSTVIEW_OUT, PortKey:PostView_Out:0:0:7:3 stream:target:0xb4000073e2c95c50:0xb4000073e2c95710 Stream: 320 X 240:0x23:0:0x0:6
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_YUV_OUT, PortKey:Yuv_Out:0:0:6:3 stream:target:0xb4000073e2c91340:0xb4000073e2c97700 Stream: 640 X 480:0x23:0:0x0:7</code></pre>
+</details>
 ]]></content>
       <categories>
         <category>Camera-Driver</category>

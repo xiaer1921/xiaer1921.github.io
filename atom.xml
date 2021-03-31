@@ -140,7 +140,7 @@ camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针�
     <link href="http://sholck.top/archives/8a2ade19.html"/>
     <id>http://sholck.top/archives/8a2ade19.html</id>
     <published>2020-03-30T10:53:00.000Z</published>
-    <updated>2021-03-30T11:08:29.792Z</updated>
+    <updated>2021-03-31T07:40:25.288Z</updated>
     
     
       
@@ -167,10 +167,11 @@ camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针�
     <link href="http://sholck.top/archives/8a2ade18.html"/>
     <id>http://sholck.top/archives/8a2ade18.html</id>
     <published>2020-03-23T17:03:00.000Z</published>
-    <updated>2021-03-30T11:10:08.060Z</updated>
+    <updated>2021-03-31T07:55:37.436Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Feature2&quot;&gt;&lt;a href=&quot;#Feature2&quot; class=&quot;headerlink&quot; title=&quot;Feature2&quot;&gt;&lt;/a&gt;Feature2&lt;/h1&gt;&lt;p&gt;当我们想要去实现特定功能的时候，我们需要使用FGM管理实现feature功能的各类组件 并根据feature拓扑创建对应的pipeline去实现，这些组件包括FGS,FPM,线程池，TBM。本篇文章将从feature组件的创建以及各组件的功能组合如何实现特定feature来描述，而关联&lt;a href=&quot;https://sholck.top/archives/8a2ade15.html&quot;&gt;底层的pipeline建立和node处理&lt;/a&gt;，&lt;a href=&quot;https://sholck.top/archives/8a2ade14.html&quot;&gt;PCR逻辑&lt;/a&gt;已经在其他文章详细描述，本文不再重新描述。&lt;/p&gt;
+&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;#1&quot;&gt;feature2框架介绍&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;#2&quot;&gt;configure_stream&lt;/a&gt;&lt;/li&gt;
