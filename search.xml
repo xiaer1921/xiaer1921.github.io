@@ -1,72 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>session flush timeout学习</title>
-    <url>/archives/8a2ade16.html</url>
-    <content><![CDATA[<h1 id="session-flush-timeout学习"><a href="#session-flush-timeout学习" class="headerlink" title="session flush timeout学习"></a>session flush timeout学习</h1><ul>
-<li>背景</li>
-<li>超时处理流程</li>
-<li>Condition处理</li>
-<li>扩展</li>
-</ul>
-<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>之前做过的mtkcam或者camx,都有对timeout进行调整的处理。当前碰到一个拍照没有图片返回的案例，故对这个案例进行分析。</p>
-<a id="more"></a>
-
-<p>异常log如下：</p>
-<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">RuninT:CameraTest2( 4357): take piture time out(TIMEOUT<span class="emphasis">_LIMIT/1000s) and quit test</span></span><br><span class="line"><span class="emphasis">RuninT:Utility( 4357): upfail:pref_</span>cameratake<span class="emphasis">_piture_</span>time<span class="emphasis">_out</span></span><br><span class="line"><span class="emphasis">RuninT:CameraTest2( 4357): onPause()</span></span><br><span class="line"><span class="emphasis">RuninT:CameraTest2( 4357): close Camera...</span></span><br><span class="line"><span class="emphasis"></span></span><br><span class="line"><span class="emphasis"> camxhal3.cpp:1488 flush() HalOp: Begin FLUSH: 0xb4000070d3e2d040, logicalCameraId: 1, cameraId: 1</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">ERROR</span>][<span class="symbol">CORE   </span>] camxsession.cpp:125 WaitTillAllResultsAvailable() TimedWait for results timed out at 350 ms with error CamxResultETimeout! Pending results:</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">ERROR</span>][<span class="symbol">CORE   </span>] camxsession.cpp:138 WaitTillAllResultsAvailable() Flush Timedout</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">ERROR</span>][<span class="symbol">CORE   </span>] camxsession.cpp:284 FallbackFlush() Fallback TimedWait for results timed out at 100 ms with error CamxResultETimeout!</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">CORE_CFG</span>][<span class="symbol">CORE   </span>] camxnode.cpp:10938 Flush() Flushing Node JPEG_</span>SW:0 for requestId 1 on pipeline InternalZSLYuv2Jpeg:0</span><br><span class="line"> CamX    (  834): [<span class="string"> WARN</span>][<span class="symbol">JPEG   </span>] camxjpegswencnode.cpp:1577 CancelRequest() Flush called on requestId: 1, m<span class="emphasis">_currRequestId: 1, Main img engine ref: 0xb4000070d461c828</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string"> WARN</span>][<span class="symbol">JPEG   </span>] camxjpegswencnode.cpp:1584 CancelRequest() Calling abort on main img encode, m_</span>bAbortCalledOnMain: 1</span><br></pre></td></tr></table></figure>
-
-<p>当PCR处理时，如果一个node处理超时或者异常，这会直接影响与其有依赖关系的node, 则会对所处pipeline的处理造成延迟甚至堵塞。之后flush处理，需要对在PCR处理的session进行结果等待，这种情况属于isSessionFlush，如果在设置的时间阀值处理超时后，则需要对还在运行的pipeline进行处理。但无论是何种方面造成的延迟，通过时间阀数timeout来进行判定，理论上我们不允许等待时间太长。</p>
-<hr>
-<h2 id="超时处理流程"><a href="#超时处理流程" class="headerlink" title="超时处理流程"></a>超时处理流程</h2><p>下图是一个大体的超时处理流程，基于SessionFlush</p>
-<p><img src="/images/flush-sessionWaittime.png" alt="alt"></p>
-<p>camx的事务处理都是通过session来进行管理的，无论是session， pipeline， node都有一个timeout来进行判定是否处理超时。</p>
-<h3 id="session-pipeline处理"><a href="#session-pipeline处理" class="headerlink" title="session-pipeline处理"></a>session-pipeline处理</h3><figure class="highlight lisp"><table><tr><td class="code"><pre><span class="line">//Func(<span class="name">selfWaitTillAllResultsAvailablecall</span>)</span><br><span class="line">sessionWaittime =Min( <span class="name">Max</span>(<span class="name">pipeline1Waittime</span>, pipeline2Waittime)+paddingtime, maxWaitTime )</span><br></pre></td></tr></table></figure>
-
-<p>maxWaitTime 为camxsetting.xml中配置，为sessionMaxFlushWaitTime，默认设置为500ms<br>paddingtime    为camxsetting.xml中配置，为sessionResponseTimePadding，默认设置为50ms，用来描述pipeline除了PCR处理之外的其他动作用时。</p>
-<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line">paddingTime = Utils::<span class="constructor">MaxUINT64(<span class="params">paddingTime</span>, <span class="params">paddingTime</span><span class="operator">*</span><span class="params">m_livePendingRequests</span>)</span>;</span><br></pre></td></tr></table></figure>
-
-<p><font color=#2196F3 >pipeline waittime为这条pipeline上 正在运行的node的最大reposeTime</font></p>
-<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">result</span> = m_pWaitAllResultsAvailable-&gt;</span>T<span class="function"><span class="title">imedWait</span>(m_pWaitForResultsLock-&gt;</span>GetNativeHandle(), waitTime);</span><br></pre></td></tr></table></figure>
-
-<p>下面是一些node的等待时间设置</p>
-<figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line">Jpeg <span class="keyword">node</span><span class="title">为</span></span><br><span class="line"><span class="title">static</span> const UINT32 MaxDefaultFlushResponseTime     = <span class="number">450</span>; //default = <span class="number">300</span>           ///Default flush repsonse time (<span class="keyword">in</span> milliseconds)</span><br><span class="line"></span><br><span class="line">custom <span class="keyword">node</span><span class="title">为通过以下方式获取</span></span><br><span class="line"><span class="title">m_nodeCallbacks</span>.pGetFlushResponse(&amp;nodeResponse<span class="literal">Inf</span>o);</span><br><span class="line">在camxchinodeswmfnr.cpp节点中设置为：</span><br><span class="line">static const UINT32 MaxDefaultFlushResponseTime   = <span class="number">2000</span>;        ///<span class="tag">&lt; Default flush</span></span><br><span class="line"><span class="tag">repsonse time (in milliseconds)</span></span><br></pre></td></tr></table></figure>
-
-<p>高通对其他节点有默认值为5ms<br>custom node中并出了关于responseTimeInMillisec的详细描述：</p>
-<figure class="highlight livecodeserver"><table><tr><td class="code"><pre><span class="line">// Each node needs <span class="built_in">to</span> publish <span class="keyword">a</span> response <span class="built_in">time</span> (<span class="built_in">milliseconds</span>) <span class="keyword">for</span> how <span class="keyword">long</span> <span class="keyword">it</span> takes <span class="built_in">to</span></span><br><span class="line">     <span class="comment"> // stop processing requests after flush call.</span></span><br><span class="line">     <span class="comment"> // During flush, session will consider this reponse time and will wait for nodes to flush gracefully.</span></span><br><span class="line">     <span class="comment"> // This response time can be computed dynamically based on the type of the node,</span></span><br><span class="line">     <span class="comment"> // otherwise default reponse time can be used.</span></span><br></pre></td></tr></table></figure>
-
-<p>如果在sessionWaittime 之后还是没有获取到AllResult,则实际上还设置了100ms的额外等待时间sessionFallbackWaitTimemcamxsetting.xml中配置,为100ms。</p>
-<figure class="highlight lisp"><table><tr><td class="code"><pre><span class="line">//Func(<span class="name">FallbackFlush</span>)</span><br><span class="line">result = waitCondition-&gt;TimedWait(<span class="name">m_pWaitForResultsLock-&gt;GetNativeHandle</span>(), fallbackWaitTime)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
-
-<p>如果这种情况下，还是没有处理完成（即存在pipeline的状态为STREAM_ON）,针对这种状态情况下的pipeline进行FlushPendingNodes操作</p>
-<figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">if</span> (<span class="attribute">PipelineStatus</span>::STREAM_ON == m_pipelineData[pipelineIndex].pPipeline-&gt;GetPipelineStatus())</span><br><span class="line">              &#123;</span><br><span class="line">                  <span class="selector-tag">m_pipelineData</span><span class="selector-attr">[pipelineIndex]</span><span class="selector-class">.pPipeline-</span>&gt;<span class="selector-tag">FlushPendingNodes</span>();                                                                                                                                      </span><br><span class="line">              &#125;</span><br></pre></td></tr></table></figure>
-
-<p>这个时候已经认为超出了平台的忍耐，需要进行node flush处理。针对全部未处理完毕的request下的node，如果当前node处于Setup和Runing状态下的node进行flush。</p>
-<figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">else</span> <span class="selector-tag">if</span> (<span class="attribute">PerRequestNodeStatus</span>::Setup == requestStatus || <span class="attribute">PerRequestNodeStatus</span>::Running == requestStatus)</span><br><span class="line">              &#123;    </span><br><span class="line">                  <span class="selector-tag">m_ppNodes</span><span class="selector-attr">[index]</span><span class="selector-tag">-</span>&gt;<span class="selector-tag">Flush</span>(requestId);                                                                                                                                                                </span><br><span class="line">              &#125;</span><br></pre></td></tr></table></figure>
-<p>在node处理完毕，如果还有未处理完的pipeline,再通过100ms的超时来继续检查。</p>
-<h3 id="node处理"><a href="#node处理" class="headerlink" title="node处理"></a>node处理</h3><p>node的flush包含如下处理：</p>
-<ul>
-<li>CancelRequest(requestId); 针对实现该操作的node, 比如<font color=#2196F3 >jpeg</font>， 有jpegswencnode(不同于custom node,继承于node类)，会对算法jpeg engine进行abort处理。没有实现的,比如<font color=#2196F3 >eis</font>，继续执行ChiNodeWrapper的实现，即等待RequestWaitTime，默认为5s，如果在这5s内，该node节点的ExecuteProcessRequest流程执行完毕，则允许m_pRequestProgress-&gt;<font color=#2196F3 >Broadcast</font>()来唤醒线程。如果超时，在raiserecoverysigabrt（camxsettings.xml ）配置为true的情况下，则会主动触发Abort信号。</li>
-<li>.CSLFenceSignal通知fences失败处理。</li>
-</ul>
-<h2 id="Condition处理"><a href="#Condition处理" class="headerlink" title="Condition处理"></a>Condition处理</h2><p>关于相关的Condition处理： </p>
-<ol>
-<li>m_pWaitAllResultsAvailable   在NotifyProcessingDone通过m_pWaitAllResultsAvailable-&gt;Signal()唤醒，此时应该所有node都处理完毕，live pending requests为0。当然这要求有新的inject触发<br>线程ProcessResults处理，并在AdvanceMinExpectedResult处理中所有的result都返回的情况下使得canAdvance 为TRUE，从而进入NotifyProcessingDone流程。<font color=#2196F3 >这里发现一个相当有用的点，camxsettings.xml开启enableFPSLog能探测平均帧率CalculateResultFPS</font>。<br>这里的唤醒为<font color=#2196F3 >Signal</font>，使用pthread_cond_signal(&amp;m_conditionVar)来唤醒阻塞的指定线程。</li>
-<li>FallbackFlush 因为isSessionFlush为TRUE，其实等待的唤醒同1.即为m_pWaitAllResultsAvailable，这里其实return是正常返回的。100ms超时</li>
-<li>CancelRequest custom node处理。m_pRequestProgress-&gt;TimedWait 超时5s,需要ExecuteProcessRequest处理完毕之后进行<font color=#2196F3 >Broadcast</font>唤醒。通过pthread_cond_broadcast(&amp;m_conditionVar)来唤醒相关的阻塞线程，为啥需要唤醒多个线程，原因未知。5s超时</li>
-<li>同2.</li>
-</ol>
-<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><p>feature也存在timeout超时</p>
-<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="attr">m_maxFeatureExecutionTime</span> = CalculateMaxFeatureExecutionTime()<span class="comment">;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>Camera-Driver</category>
-      </categories>
-      <tags>
-        <tag>Camera-Camx</tag>
-        <tag>flush</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>生产力工具记录</title>
     <url>/archives/8a2ade17.html</url>
     <content><![CDATA[<h1 id="生产力工具记录"><a href="#生产力工具记录" class="headerlink" title="生产力工具记录"></a>生产力工具记录</h1><p>下面是一些生产力工具</p>
@@ -150,6 +84,72 @@
       </tags>
   </entry>
   <entry>
+    <title>session flush timeout学习</title>
+    <url>/archives/8a2ade16.html</url>
+    <content><![CDATA[<h1 id="session-flush-timeout学习"><a href="#session-flush-timeout学习" class="headerlink" title="session flush timeout学习"></a>session flush timeout学习</h1><ul>
+<li>背景</li>
+<li>超时处理流程</li>
+<li>Condition处理</li>
+<li>扩展</li>
+</ul>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>之前做过的mtkcam或者camx,都有对timeout进行调整的处理。当前碰到一个拍照没有图片返回的案例，故对这个案例进行分析。</p>
+<a id="more"></a>
+
+<p>异常log如下：</p>
+<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">RuninT:CameraTest2( 4357): take piture time out(TIMEOUT<span class="emphasis">_LIMIT/1000s) and quit test</span></span><br><span class="line"><span class="emphasis">RuninT:Utility( 4357): upfail:pref_</span>cameratake<span class="emphasis">_piture_</span>time<span class="emphasis">_out</span></span><br><span class="line"><span class="emphasis">RuninT:CameraTest2( 4357): onPause()</span></span><br><span class="line"><span class="emphasis">RuninT:CameraTest2( 4357): close Camera...</span></span><br><span class="line"><span class="emphasis"></span></span><br><span class="line"><span class="emphasis"> camxhal3.cpp:1488 flush() HalOp: Begin FLUSH: 0xb4000070d3e2d040, logicalCameraId: 1, cameraId: 1</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">ERROR</span>][<span class="symbol">CORE   </span>] camxsession.cpp:125 WaitTillAllResultsAvailable() TimedWait for results timed out at 350 ms with error CamxResultETimeout! Pending results:</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">ERROR</span>][<span class="symbol">CORE   </span>] camxsession.cpp:138 WaitTillAllResultsAvailable() Flush Timedout</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">ERROR</span>][<span class="symbol">CORE   </span>] camxsession.cpp:284 FallbackFlush() Fallback TimedWait for results timed out at 100 ms with error CamxResultETimeout!</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string">CORE_CFG</span>][<span class="symbol">CORE   </span>] camxnode.cpp:10938 Flush() Flushing Node JPEG_</span>SW:0 for requestId 1 on pipeline InternalZSLYuv2Jpeg:0</span><br><span class="line"> CamX    (  834): [<span class="string"> WARN</span>][<span class="symbol">JPEG   </span>] camxjpegswencnode.cpp:1577 CancelRequest() Flush called on requestId: 1, m<span class="emphasis">_currRequestId: 1, Main img engine ref: 0xb4000070d461c828</span></span><br><span class="line"><span class="emphasis"> CamX    (  834): [<span class="string"> WARN</span>][<span class="symbol">JPEG   </span>] camxjpegswencnode.cpp:1584 CancelRequest() Calling abort on main img encode, m_</span>bAbortCalledOnMain: 1</span><br></pre></td></tr></table></figure>
+
+<p>当PCR处理时，如果一个node处理超时或者异常，这会直接影响与其有依赖关系的node, 则会对所处pipeline的处理造成延迟甚至堵塞。之后flush处理，需要对在PCR处理的session进行结果等待，这种情况属于isSessionFlush，如果在设置的时间阀值处理超时后，则需要对还在运行的pipeline进行处理。但无论是何种方面造成的延迟，通过时间阀数timeout来进行判定，理论上我们不允许等待时间太长。</p>
+<hr>
+<h2 id="超时处理流程"><a href="#超时处理流程" class="headerlink" title="超时处理流程"></a>超时处理流程</h2><p>下图是一个大体的超时处理流程，基于SessionFlush</p>
+<p><img src="/images/flush-sessionWaittime.png" alt="alt"></p>
+<p>camx的事务处理都是通过session来进行管理的，无论是session， pipeline， node都有一个timeout来进行判定是否处理超时。</p>
+<h3 id="session-pipeline处理"><a href="#session-pipeline处理" class="headerlink" title="session-pipeline处理"></a>session-pipeline处理</h3><figure class="highlight lisp"><table><tr><td class="code"><pre><span class="line">//Func(<span class="name">selfWaitTillAllResultsAvailablecall</span>)</span><br><span class="line">sessionWaittime =Min( <span class="name">Max</span>(<span class="name">pipeline1Waittime</span>, pipeline2Waittime)+paddingtime, maxWaitTime )</span><br></pre></td></tr></table></figure>
+
+<p>maxWaitTime 为camxsetting.xml中配置，为sessionMaxFlushWaitTime，默认设置为500ms<br>paddingtime    为camxsetting.xml中配置，为sessionResponseTimePadding，默认设置为50ms，用来描述pipeline除了PCR处理之外的其他动作用时。</p>
+<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line">paddingTime = Utils::<span class="constructor">MaxUINT64(<span class="params">paddingTime</span>, <span class="params">paddingTime</span><span class="operator">*</span><span class="params">m_livePendingRequests</span>)</span>;</span><br></pre></td></tr></table></figure>
+
+<p><font color=#2196F3 >pipeline waittime为这条pipeline上 正在运行的node的最大reposeTime</font></p>
+<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">result</span> = m_pWaitAllResultsAvailable-&gt;</span>T<span class="function"><span class="title">imedWait</span>(m_pWaitForResultsLock-&gt;</span>GetNativeHandle(), waitTime);</span><br></pre></td></tr></table></figure>
+
+<p>下面是一些node的等待时间设置</p>
+<figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line">Jpeg <span class="keyword">node</span><span class="title">为</span></span><br><span class="line"><span class="title">static</span> const UINT32 MaxDefaultFlushResponseTime     = <span class="number">450</span>; //default = <span class="number">300</span>           ///Default flush repsonse time (<span class="keyword">in</span> milliseconds)</span><br><span class="line"></span><br><span class="line">custom <span class="keyword">node</span><span class="title">为通过以下方式获取</span></span><br><span class="line"><span class="title">m_nodeCallbacks</span>.pGetFlushResponse(&amp;nodeResponse<span class="literal">Inf</span>o);</span><br><span class="line">在camxchinodeswmfnr.cpp节点中设置为：</span><br><span class="line">static const UINT32 MaxDefaultFlushResponseTime   = <span class="number">2000</span>;        ///<span class="tag">&lt; Default flush</span></span><br><span class="line"><span class="tag">repsonse time (in milliseconds)</span></span><br></pre></td></tr></table></figure>
+
+<p>高通对其他节点有默认值为5ms<br>custom node中并出了关于responseTimeInMillisec的详细描述：</p>
+<figure class="highlight livecodeserver"><table><tr><td class="code"><pre><span class="line">// Each node needs <span class="built_in">to</span> publish <span class="keyword">a</span> response <span class="built_in">time</span> (<span class="built_in">milliseconds</span>) <span class="keyword">for</span> how <span class="keyword">long</span> <span class="keyword">it</span> takes <span class="built_in">to</span></span><br><span class="line">     <span class="comment"> // stop processing requests after flush call.</span></span><br><span class="line">     <span class="comment"> // During flush, session will consider this reponse time and will wait for nodes to flush gracefully.</span></span><br><span class="line">     <span class="comment"> // This response time can be computed dynamically based on the type of the node,</span></span><br><span class="line">     <span class="comment"> // otherwise default reponse time can be used.</span></span><br></pre></td></tr></table></figure>
+
+<p>如果在sessionWaittime 之后还是没有获取到AllResult,则实际上还设置了100ms的额外等待时间sessionFallbackWaitTimemcamxsetting.xml中配置,为100ms。</p>
+<figure class="highlight lisp"><table><tr><td class="code"><pre><span class="line">//Func(<span class="name">FallbackFlush</span>)</span><br><span class="line">result = waitCondition-&gt;TimedWait(<span class="name">m_pWaitForResultsLock-&gt;GetNativeHandle</span>(), fallbackWaitTime)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果这种情况下，还是没有处理完成（即存在pipeline的状态为STREAM_ON）,针对这种状态情况下的pipeline进行FlushPendingNodes操作</p>
+<figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">if</span> (<span class="attribute">PipelineStatus</span>::STREAM_ON == m_pipelineData[pipelineIndex].pPipeline-&gt;GetPipelineStatus())</span><br><span class="line">              &#123;</span><br><span class="line">                  <span class="selector-tag">m_pipelineData</span><span class="selector-attr">[pipelineIndex]</span><span class="selector-class">.pPipeline-</span>&gt;<span class="selector-tag">FlushPendingNodes</span>();                                                                                                                                      </span><br><span class="line">              &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候已经认为超出了平台的忍耐，需要进行node flush处理。针对全部未处理完毕的request下的node，如果当前node处于Setup和Runing状态下的node进行flush。</p>
+<figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">else</span> <span class="selector-tag">if</span> (<span class="attribute">PerRequestNodeStatus</span>::Setup == requestStatus || <span class="attribute">PerRequestNodeStatus</span>::Running == requestStatus)</span><br><span class="line">              &#123;    </span><br><span class="line">                  <span class="selector-tag">m_ppNodes</span><span class="selector-attr">[index]</span><span class="selector-tag">-</span>&gt;<span class="selector-tag">Flush</span>(requestId);                                                                                                                                                                </span><br><span class="line">              &#125;</span><br></pre></td></tr></table></figure>
+<p>在node处理完毕，如果还有未处理完的pipeline,再通过100ms的超时来继续检查。</p>
+<h3 id="node处理"><a href="#node处理" class="headerlink" title="node处理"></a>node处理</h3><p>node的flush包含如下处理：</p>
+<ul>
+<li>CancelRequest(requestId); 针对实现该操作的node, 比如<font color=#2196F3 >jpeg</font>， 有jpegswencnode(不同于custom node,继承于node类)，会对算法jpeg engine进行abort处理。没有实现的,比如<font color=#2196F3 >eis</font>，继续执行ChiNodeWrapper的实现，即等待RequestWaitTime，默认为5s，如果在这5s内，该node节点的ExecuteProcessRequest流程执行完毕，则允许m_pRequestProgress-&gt;<font color=#2196F3 >Broadcast</font>()来唤醒线程。如果超时，在raiserecoverysigabrt（camxsettings.xml ）配置为true的情况下，则会主动触发Abort信号。</li>
+<li>.CSLFenceSignal通知fences失败处理。</li>
+</ul>
+<h2 id="Condition处理"><a href="#Condition处理" class="headerlink" title="Condition处理"></a>Condition处理</h2><p>关于相关的Condition处理： </p>
+<ol>
+<li>m_pWaitAllResultsAvailable   在NotifyProcessingDone通过m_pWaitAllResultsAvailable-&gt;Signal()唤醒，此时应该所有node都处理完毕，live pending requests为0。当然这要求有新的inject触发<br>线程ProcessResults处理，并在AdvanceMinExpectedResult处理中所有的result都返回的情况下使得canAdvance 为TRUE，从而进入NotifyProcessingDone流程。<font color=#2196F3 >这里发现一个相当有用的点，camxsettings.xml开启enableFPSLog能探测平均帧率CalculateResultFPS</font>。<br>这里的唤醒为<font color=#2196F3 >Signal</font>，使用pthread_cond_signal(&amp;m_conditionVar)来唤醒阻塞的指定线程。</li>
+<li>FallbackFlush 因为isSessionFlush为TRUE，其实等待的唤醒同1.即为m_pWaitAllResultsAvailable，这里其实return是正常返回的。100ms超时</li>
+<li>CancelRequest custom node处理。m_pRequestProgress-&gt;TimedWait 超时5s,需要ExecuteProcessRequest处理完毕之后进行<font color=#2196F3 >Broadcast</font>唤醒。通过pthread_cond_broadcast(&amp;m_conditionVar)来唤醒相关的阻塞线程，为啥需要唤醒多个线程，原因未知。5s超时</li>
+<li>同2.</li>
+</ol>
+<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><p>feature也存在timeout超时</p>
+<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="attr">m_maxFeatureExecutionTime</span> = CalculateMaxFeatureExecutionTime()<span class="comment">;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>Camera-Driver</category>
+      </categories>
+      <tags>
+        <tag>Camera-Camx</tag>
+        <tag>flush</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>单&amp;双摄configure stream流程</title>
     <url>/archives/8a2ade15.html</url>
     <content><![CDATA[<h1 id="单-amp-双摄configure-stream流程"><a href="#单-amp-双摄configure-stream流程" class="headerlink" title="单&amp;双摄configure stream流程"></a>单&amp;双摄configure stream流程</h1><ul>
@@ -200,6 +200,205 @@
       <tags>
         <tag>Camera-Camx</tag>
         <tag>configure_stream</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Camx-Feature2-featureInstanceConnect</title>
+    <url>/archives/8a2ade19.html</url>
+    <content><![CDATA[<h1 id="Camx-Feature2-featureInstanceConnect"><a href="#Camx-Feature2-featureInstanceConnect" class="headerlink" title="Camx-Feature2-featureInstanceConnect"></a>Camx-Feature2-featureInstanceConnect</h1><p>在这小节中，我们会对feature graph的整合和feature instance之间的连接有个大致的了解</p>
+<p>从之前GetAllFeatureGraphDescriptors中过滤掉一部分的featureGraphDesc，剩下的按照组合规则构成VirtualSuperGraph，那么具体各feature之间的连接顺序和规则是通过什么来确定的?</p>
+<p>下面是sm4350当前预览的feature 拓扑详细的描述了之间的连接</p>
+<p><img src="/images/feature2/feature2-featureInstanceConnect.png" alt="alt"></p>
+<p>整理之前的全部信息，包括整合以后的feature instance下的stream和端口组合。 </p>
+<details>
+  <summary>确定需要组合的featureGraphDesc</summary>
+
+<pre><code>Insert single graph:cameraID 0-&gt;RealtimeFG-&gt;0 //无 internal link
+Insert single graph:cameraID 0-&gt;RTMemcpyYUV-&gt;0 //无feature instance 
+Insert single graph:cameraID 0-&gt;RTBayer2YUVHDRT1JPEG-&gt;0
+Insert single graph:cameraID 0-&gt;RTBayer2YUVJPEG-&gt;0
+Insert single graph:cameraID 0-&gt;RTBayer2YUV-&gt;0
+Insert single graph:cameraID 0-&gt;RTBayer2YUVCDSJPEG-&gt;0
+Insert single graph:cameraID 0-&gt;RTRawHDRBayer2YUVJPEGOEM-&gt;0
+Insert single graph:cameraID 0-&gt;RTRawHDRBayer2YUVOEM-&gt;0
+Insert single graph:cameraID 0-&gt;RTBayer2YUVCDS-&gt;0</code></pre>
+</details>
+根据Internal links和Sink links画出拓扑
+
+<details>
+  <summary>确定VirtualSuperGraph下包含的feature instance</summary>
+
+<pre><code>CreateFeatureInstances() :VirtualSuperGraph, numFeatureInstances:7, logicalCameraId:0
+CreateFeatureInstances() RealTime(0xb400007472ce27f0) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;0, 0, 0, 0&#125;
+CreateFeatureInstances() RawHDR(0xb400007472c52f10) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;10, 0, 0, 0&#125;
+CreateFeatureInstances() Bayer2Yuv(0xb400007472c83f70) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;1, 0, 0, 0&#125;
+CreateFeatureInstances() Bayer2Yuv(0xb400007472cd5050) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;1, 8, 0, 16384&#125;
+CreateFeatureInstances() HDR(0xb400007472c96530) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;6, 0, 0, 0&#125;
+CreateFeatureInstances() JPEG(0xb400007472c8acd0) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;5, 0, 0, 0&#125;
+CreateFeatureInstances() Yuv2Yuv(0xb400007472cb5c50) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;33, 0, 0, 0&#125;</code></pre>
+</details>
+
+<details>
+  <summary>确定各feature instance下的stream</summary>
+
+<pre><code>//RealTime
+DoStreamNegotiation() numStream:6
+ClassifyStream() Name = RealTime: Res: 1440 X 1080 Format = 0x22 Usage = 0x900 Type = 0 STREAM = 0xb400007402c56488 (intent = 1 bpp = 0) PhyCamId =  &gt;&gt;configure_stream预览流
+ClassifyStream() Name = RealTime: Res: 320 X 240 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c95710 (intent = 6 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = RealTime: Res: 4208 X 3120 Format = 0x25 Usage = 0x20002 Type = 0 STREAM = 0xb4000073e2c96580 (intent = 8 bpp = 10) PhyCamId = (null)
+ClassifyStream() Name = RealTime: Res: 4096 X 3072 Format = 0x20 Usage = 0x20002 Type = 0 STREAM = 0xb4000073e2c95780 (intent = 2 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = RealTime: Res: 1440 X 1080 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c95630 (intent = 3 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = RealTime: Res: 640 X 480 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c97700 (intent = 7 bpp = 0) PhyCamId = (null)
+//RawHDR
+ClassifyStream() Name = RawHDR: Res: 4208 X 3120 Format = 0x25 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c93800 (intent = 5 bpp = 0) PhyCamId = (null) 
+ClassifyStream() Name = RawHDR: Res: 4208 X 3120 Format = 0x25 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c979a0 (intent = 2 bpp = 0) PhyCamId = (null)
+//Bayer2Yuv
+DoStreamNegotiation() numStream:4 screenGrab: 0
+ClassifyStream() Name = Bayer2Yuv: Res: 4208 X 3120 Format = 0x25 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c95400 (intent = 7 bpp = 10) PhyCamId = (null)
+ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c933a0 (intent = 2 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c959b0 (intent = 7 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c97e70 (intent = 7 bpp = 0) PhyCamId = (null)
+//Bayer2Yuv CDS
+DoStreamNegotiation() numStream:4 screenGrab: 0
+ClassifyStream() Name = Bayer2Yuv: Res: 4208 X 3120 Format = 0x25 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c96dd0 (intent = 7 bpp = 10) PhyCamId = (null)
+ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c8d130 (intent = 2 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c97230 (intent = 7 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c94de0 (intent = 7 bpp = 0) PhyCamId = (null)
+//HDR
+ClassifyStream() Name = HDR: Res: 4160 X 3120 Format = 0x23 Usage = 0x20022 Type = 0 STREAM = 0xb4000073e2c95160 (intent = 2 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = HDR: Res: 4160 X 3120 Format = 0x23 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c951d0 (intent = 2 bpp = 0) PhyCamId = (null)
+//JPEG
+DoStreamNegotiation() numStream:2 screenGrab: 0 
+ClassifyStream() Name = JPEG: Res: 4160 X 3120 Format = 0x23 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c932c0 (intent = 7 bpp = 0) PhyCamId = (null)
+ClassifyStream() Name = JPEG: Res: 4160 X 3120 Format = 0x21 Usage = 0x3 Type = 0 STREAM = 0xb400007402c81c48 (intent = 2 bpp = 0) PhyCamId = &gt;&gt;configure_stream 拍照流
+//Yuv2Yuv
+ClassifyStream() Name = Yuv2Yuv: Res: 1440 X 1080 Format = 0x22 Usage = 0x900 Type = 0 STREAM = 0xb400007402c56488 (intent = 1 bpp = 0) PhyCamId  =&gt;&gt;configure_stream预览流
+ClassifyStream() Name = Yuv2Yuv: Res: 4160 X 3120 Format = 0x21 Usage = 0x3 Type = 0 STREAM = 0xb400007402c81c48 (intent = 2 bpp = 0) PhyCamId = &gt;&gt;configure_stream 拍照流</code></pre>
+</details>
+
+<details>
+  <summary>确定各feature instance下的port</summary>
+
+<pre><code>//重复的已经删除
+//realtime all links 
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 5&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 3&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 4&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 6&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 7&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 8&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 14&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 19&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+//RawHDR
+operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 4&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+//Bayer2Yuv feature 1 instance 0
+operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 3&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+//Bayer2Yuv feature 1 instance 8
+operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+//HDR
+operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 4&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+//JPEG
+operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 3&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+//Yuv2Yuv
+operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
+operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0</code></pre>
+</details>
+
+<details>
+  <summary>获取feature instance的pipeline</summary>
+
+<pre><code>//pipeline的选择：一个session下的pipeline id有很多都是一致的，因此当通过OnPipelineSelect选择一个最基础的成功以后，那么之后的都认为是Session has pipeline
+PrepareFeatureData() Feature2Mapping: FeatureName = JPEG, numSessions = 1, numPipelines = 2 numPorts = 12
+PrepareFeatureData() session: 0, name: JPEG, pipeline: 0, name: InternalZSLYuv2Jpeg
+PrepareFeatureData() Feature2Mapping: FeatureName = HDR, numSessions = 1, numPipelines = 4 numPorts = 28
+PrepareFeatureData() session: 0, name: HDRT1, pipeline: 0, name: Merge3YuvCustomTo1Yuv
+PrepareFeatureData() Feature2Mapping: FeatureName = Bayer2Yuv, numSessions = 1, numPipelines = 9 numPorts = 54 //CDS instance 8
+PrepareFeatureData() session: 0, name: Bayer2Yuv, pipeline: 0, name: ZSLSnapshotYUVHALwithCDS
+PrepareFeatureData() Feature2Mapping: FeatureName = Bayer2Yuv, numSessions = 1, numPipelines = 9 numPorts = 54
+PrepareFeatureData() session: 0, name: Bayer2Yuv, pipeline: 0, name: ZSLSnapshotYUVHAL
+PrepareFeatureData() Feature2Mapping: FeatureName = RawHDR, numSessions = 1, numPipelines = 1 numPorts = 7
+PrepareFeatureData() session: 0, name: RawHDR, pipeline: 0, name: SWMFMergeRaw
+PrepareFeatureData() Feature2Mapping: FeatureName = RealTime, numSessions = 1, numPipelines = 14 numPorts = 280
+PrepareFeatureData() session: 0, name: RealTime, pipeline: 0, name: ZSLPreviewRaw_LT1080p</code></pre>
+</details>
+针对部分feature instance，在进行pipeline拓扑优化时会有log，我们可以根据log推出大致拓扑prune结构和为什么disable部分portData中的端口，比如InternalZSLYuv2Jpeg,但是图中的HEIC_BLOB是不会配流的，因为和jpeg feature instance 的output stream不匹配
+
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">PruneUsecaseDescriptor</span>() InternalZSLYuv<span class="number">2</span>Jpeg Pruned Source target srcTargetIdx:<span class="number">0</span>, TARGET_BUFFER_CUSTOM_YUV numOfPort:<span class="number">1</span> portInfo:<span class="number">15</span>,<span class="number">0</span>,<span class="number">0</span></span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">2</span>)-&gt;DestNode(<span class="number">2</span>,<span class="number">2</span>,<span class="number">0</span>)</span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">15</span>,<span class="number">0</span>,<span class="number">2</span>)-&gt;DestNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">0</span>)</span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">15</span>,<span class="number">0</span>,<span class="number">3</span>)-&gt;DestNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<p><img src="/images/feature2/pipeline-InternalZSLYuv2Jpeg.png" alt="alt"></p>
+<details>
+  <summary>给Usecase中的pipeline和PortData匹配以后的Target配流,log中包含result stream和 target stream</summary>
+
+<pre><code>//jpeg feature instance
+Jpeg_0 pushing inStream [0xb4000073e2c932c0 4160x3120] outStream [0xb400007402c81c48 4160x3120]
+
+//inStream
+InitializeTargetStream() JPEG: Target:TARGET_BUFFER_CUSTOM_YUV, PortKey:YUV_In:0:0:0:1 stream:target:0xb4000073e2c96c80:0xb4000073e2c932c0 Stream: 4160 X 3120:0x23:1:0x20022:7
+//outStream
+InitializeTargetStream() JPEG: Target:TARGET_BUFFER_SNAPSHOT, PortKey:JPEG_Out:0:0:0:3 stream:target:0xb4000073e2c8d520:0xb400007402c81c48 Stream: 4160 X 3120:0x21:0:0x3:2
+
+//HDR feature instance
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV_OUT, PortKey:YUV_Out_External:0:0:0:3 stream:target:0xb4000073e2c8c4f0: 0xb4000073e2c95160 Stream: 4160 X 3120:0x23:0:0x20022:2
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV0, PortKey:YUV_In1_Internal:0:0:1:0 stream:target:0xb4000073e2c93cd0:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV1, PortKey:YUV_In0_External:0:0:0:1 stream:target:0xb4000073e2c94590:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
+InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV2, PortKey:YUV_In3_Internal:0:0:3:0 stream:target:0xb4000073e2c942f0:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
+
+//bayer2yuv CDS
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL, PortKey:YUV_Out:0:0:0:3 stream:target:0xb4000073e2c92840:0xb4000073e2c8d130 Stream: 4160 X 3120:0x23:0:0x0:2
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL2, PortKey:YUV_Out3:0:0:3:3 stream:target:0xb4000073e2c947c0:0xb4000073e2c97230 Stream: 4160 X 3120:0x23:0:0x0:7
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_RAW, PortKey:RDI_In:0:0:0:1 stream:target:0xb4000073e2c98260:0xb4000073e2c96dd0 Stream: 4208 X3120:0x25:1:0x20022:7
+
+//bayer2yuv
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL, PortKey:YUV_Out:0:0:0:3 stream:target:0xb4000073e2c967b0:0xb000073e2c933a0 Stream: 4160 X 3120:0x23:0:0x0:2
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL2, PortKey:YUV_Out3:0:0:3:3 stream:target:0xb4000073e2c96f90:0xb4000073e2c959b0 Stream: 4160 X 3120:0x23:0:0x0:7
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL3, PortKey:YUV_Out2:0:0:2:3 stream:target:0xb4000073e2c97460:0xb4000073e2c97e70 Stream: 4160 X 3120:0x23:0:0x0:7
+InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_RAW, PortKey:RDI_In:0:0:0:1 stream:target:0xb4000073e2c950f0:0xb4000073e2c95400 Stream: 4208 X3120:0x25:1:0x20022:7
+
+//RAWHDR feature instance
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_OUT, PortKey:RAW_Out_External:0:0:0:3 stream:target:0xb4000073e2c96c10:0xb4000073e2c979a0 Stream: 4208 X 3120:0x25:0:0x0:2
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN0, PortKey:RAW_In0_External:0:0:0:1  stream:target:0xb4000073e2c920d0:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN1, PortKey:RAW_In2_Internal:0:0:2:0 stream:target:0xb4000073e2c96120:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
+InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN2, PortKey:RAW_In3_Internal:0:0:3:0 stream:target:0xb4000073e2c96eb0:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
+
+//RealTime feature instance
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_DISPLAY, PortKey:Display_Out:0:0:0:3 stream:target:0xb4000073e2c91110:0xb400007402c56488 Stream: 1440 X 1080:0x22:0:0x900:1
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_VIDEO, PortKey:Video_Out:0:0:3:3 stream:target:0xb4000073e2c92680:0xb4000073e2c95630 Stream: 1440 X 1080:0x23:0:0x0:3
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_RAW_OUT, PortKey:Raw_Out:0:0:1:3 stream:target:0xb4000073e2c926f0:0xb4000073e2c96580 Stream: 4208 X 3120:0x25:0:0x20002:8 
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_IDEAL_RAW, PortKey:IDEALRaw_Out:0:0:14:3 stream:target:0xb4000073e2c93870:0xb4000073e2c95780 Stream: 4096 X 3072:0x20:0:0x20002:2
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_POSTVIEW_OUT, PortKey:PostView_Out:0:0:7:3 stream:target:0xb4000073e2c95c50:0xb4000073e2c95710 Stream: 320 X 240:0x23:0:0x0:6
+InitializeTargetStream() RealTime: Target:TARGET_BUFFER_YUV_OUT, PortKey:Yuv_Out:0:0:6:3 stream:target:0xb4000073e2c91340:0xb4000073e2c97700 Stream: 640 X 480:0x23:0:0x0:7</code></pre>
+</details>
+]]></content>
+      <categories>
+        <category>Camera-Driver</category>
+      </categories>
+      <tags>
+        <tag>Camera-Camx</tag>
+        <tag>Feature2</tag>
       </tags>
   </entry>
   <entry>
@@ -397,205 +596,6 @@
 <h3 id="TM详解"><a href="#TM详解" class="headerlink" title="TM详解"></a>TM详解</h3><ul>
 <li><a href="#0">返回主目录</a></li>
 </ul>
-]]></content>
-      <categories>
-        <category>Camera-Driver</category>
-      </categories>
-      <tags>
-        <tag>Camera-Camx</tag>
-        <tag>Feature2</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Camx-Feature2-featureInstanceConnect</title>
-    <url>/archives/8a2ade19.html</url>
-    <content><![CDATA[<h1 id="Camx-Feature2-featureInstanceConnect"><a href="#Camx-Feature2-featureInstanceConnect" class="headerlink" title="Camx-Feature2-featureInstanceConnect"></a>Camx-Feature2-featureInstanceConnect</h1><p>在这小节中，我们会对feature graph的整合和feature instance之间的连接有个大致的了解</p>
-<p>从之前GetAllFeatureGraphDescriptors中过滤掉一部分的featureGraphDesc，剩下的按照组合规则构成VirtualSuperGraph，那么具体各feature之间的连接顺序和规则是通过什么来确定的?</p>
-<p>下面是sm4350当前预览的feature 拓扑详细的描述了之间的连接</p>
-<p><img src="/images/feature2/feature2-featureInstanceConnect.png" alt="alt"></p>
-<p>整理之前的全部信息，包括整合以后的feature instance下的stream和端口组合。 </p>
-<details>
-  <summary>确定需要组合的featureGraphDesc</summary>
-
-<pre><code>Insert single graph:cameraID 0-&gt;RealtimeFG-&gt;0 //无 internal link
-Insert single graph:cameraID 0-&gt;RTMemcpyYUV-&gt;0 //无feature instance 
-Insert single graph:cameraID 0-&gt;RTBayer2YUVHDRT1JPEG-&gt;0
-Insert single graph:cameraID 0-&gt;RTBayer2YUVJPEG-&gt;0
-Insert single graph:cameraID 0-&gt;RTBayer2YUV-&gt;0
-Insert single graph:cameraID 0-&gt;RTBayer2YUVCDSJPEG-&gt;0
-Insert single graph:cameraID 0-&gt;RTRawHDRBayer2YUVJPEGOEM-&gt;0
-Insert single graph:cameraID 0-&gt;RTRawHDRBayer2YUVOEM-&gt;0
-Insert single graph:cameraID 0-&gt;RTBayer2YUVCDS-&gt;0</code></pre>
-</details>
-根据Internal links和Sink links画出拓扑
-
-<details>
-  <summary>确定VirtualSuperGraph下包含的feature instance</summary>
-
-<pre><code>CreateFeatureInstances() :VirtualSuperGraph, numFeatureInstances:7, logicalCameraId:0
-CreateFeatureInstances() RealTime(0xb400007472ce27f0) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;0, 0, 0, 0&#125;
-CreateFeatureInstances() RawHDR(0xb400007472c52f10) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;10, 0, 0, 0&#125;
-CreateFeatureInstances() Bayer2Yuv(0xb400007472c83f70) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;1, 0, 0, 0&#125;
-CreateFeatureInstances() Bayer2Yuv(0xb400007472cd5050) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;1, 8, 0, 16384&#125;
-CreateFeatureInstances() HDR(0xb400007472c96530) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;6, 0, 0, 0&#125;
-CreateFeatureInstances() JPEG(0xb400007472c8acd0) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;5, 0, 0, 0&#125;
-CreateFeatureInstances() Yuv2Yuv(0xb400007472cb5c50) &#123;featureId, instanceId, cameraId, flags&#125;: &#123;33, 0, 0, 0&#125;</code></pre>
-</details>
-
-<details>
-  <summary>确定各feature instance下的stream</summary>
-
-<pre><code>//RealTime
-DoStreamNegotiation() numStream:6
-ClassifyStream() Name = RealTime: Res: 1440 X 1080 Format = 0x22 Usage = 0x900 Type = 0 STREAM = 0xb400007402c56488 (intent = 1 bpp = 0) PhyCamId =  &gt;&gt;configure_stream预览流
-ClassifyStream() Name = RealTime: Res: 320 X 240 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c95710 (intent = 6 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = RealTime: Res: 4208 X 3120 Format = 0x25 Usage = 0x20002 Type = 0 STREAM = 0xb4000073e2c96580 (intent = 8 bpp = 10) PhyCamId = (null)
-ClassifyStream() Name = RealTime: Res: 4096 X 3072 Format = 0x20 Usage = 0x20002 Type = 0 STREAM = 0xb4000073e2c95780 (intent = 2 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = RealTime: Res: 1440 X 1080 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c95630 (intent = 3 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = RealTime: Res: 640 X 480 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c97700 (intent = 7 bpp = 0) PhyCamId = (null)
-//RawHDR
-ClassifyStream() Name = RawHDR: Res: 4208 X 3120 Format = 0x25 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c93800 (intent = 5 bpp = 0) PhyCamId = (null) 
-ClassifyStream() Name = RawHDR: Res: 4208 X 3120 Format = 0x25 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c979a0 (intent = 2 bpp = 0) PhyCamId = (null)
-//Bayer2Yuv
-DoStreamNegotiation() numStream:4 screenGrab: 0
-ClassifyStream() Name = Bayer2Yuv: Res: 4208 X 3120 Format = 0x25 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c95400 (intent = 7 bpp = 10) PhyCamId = (null)
-ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c933a0 (intent = 2 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c959b0 (intent = 7 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c97e70 (intent = 7 bpp = 0) PhyCamId = (null)
-//Bayer2Yuv CDS
-DoStreamNegotiation() numStream:4 screenGrab: 0
-ClassifyStream() Name = Bayer2Yuv: Res: 4208 X 3120 Format = 0x25 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c96dd0 (intent = 7 bpp = 10) PhyCamId = (null)
-ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c8d130 (intent = 2 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c97230 (intent = 7 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = Bayer2Yuv: Res: 4160 X 3120 Format = 0x23 Usage = 0x0 Type = 0 STREAM = 0xb4000073e2c94de0 (intent = 7 bpp = 0) PhyCamId = (null)
-//HDR
-ClassifyStream() Name = HDR: Res: 4160 X 3120 Format = 0x23 Usage = 0x20022 Type = 0 STREAM = 0xb4000073e2c95160 (intent = 2 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = HDR: Res: 4160 X 3120 Format = 0x23 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c951d0 (intent = 2 bpp = 0) PhyCamId = (null)
-//JPEG
-DoStreamNegotiation() numStream:2 screenGrab: 0 
-ClassifyStream() Name = JPEG: Res: 4160 X 3120 Format = 0x23 Usage = 0x20022 Type = 1 STREAM = 0xb4000073e2c932c0 (intent = 7 bpp = 0) PhyCamId = (null)
-ClassifyStream() Name = JPEG: Res: 4160 X 3120 Format = 0x21 Usage = 0x3 Type = 0 STREAM = 0xb400007402c81c48 (intent = 2 bpp = 0) PhyCamId = &gt;&gt;configure_stream 拍照流
-//Yuv2Yuv
-ClassifyStream() Name = Yuv2Yuv: Res: 1440 X 1080 Format = 0x22 Usage = 0x900 Type = 0 STREAM = 0xb400007402c56488 (intent = 1 bpp = 0) PhyCamId  =&gt;&gt;configure_stream预览流
-ClassifyStream() Name = Yuv2Yuv: Res: 4160 X 3120 Format = 0x21 Usage = 0x3 Type = 0 STREAM = 0xb400007402c81c48 (intent = 2 bpp = 0) PhyCamId = &gt;&gt;configure_stream 拍照流</code></pre>
-</details>
-
-<details>
-  <summary>确定各feature instance下的port</summary>
-
-<pre><code>//重复的已经删除
-//realtime all links 
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 5&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 3&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 4&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 6&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 7&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 8&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 14&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RealTime:0) &#123;0, 0, 19&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-//RawHDR
-operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 4&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (RawHDR:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-//Bayer2Yuv feature 1 instance 0
-operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:0) &#123;0, 0, 3&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-//Bayer2Yuv feature 1 instance 8
-operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Bayer2Yuv:8) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x4000, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-//HDR
-operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 4&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (HDR:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-//JPEG
-operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 1&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 2&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (JPEG:0) &#123;0, 0, 3&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-//Yuv2Yuv
-operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 0&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 1&#125; Dir: 1 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0
-operator()() VirtualSuperGraph (Yuv2Yuv:0) &#123;0, 0, 0&#125; Dir: 3 Flags: 0x0, CameraId: 0 Original(0) pFeatureGraphDesc=0x7357bf33c0</code></pre>
-</details>
-
-<details>
-  <summary>获取feature instance的pipeline</summary>
-
-<pre><code>//pipeline的选择：一个session下的pipeline id有很多都是一致的，因此当通过OnPipelineSelect选择一个最基础的成功以后，那么之后的都认为是Session has pipeline
-PrepareFeatureData() Feature2Mapping: FeatureName = JPEG, numSessions = 1, numPipelines = 2 numPorts = 12
-PrepareFeatureData() session: 0, name: JPEG, pipeline: 0, name: InternalZSLYuv2Jpeg
-PrepareFeatureData() Feature2Mapping: FeatureName = HDR, numSessions = 1, numPipelines = 4 numPorts = 28
-PrepareFeatureData() session: 0, name: HDRT1, pipeline: 0, name: Merge3YuvCustomTo1Yuv
-PrepareFeatureData() Feature2Mapping: FeatureName = Bayer2Yuv, numSessions = 1, numPipelines = 9 numPorts = 54 //CDS instance 8
-PrepareFeatureData() session: 0, name: Bayer2Yuv, pipeline: 0, name: ZSLSnapshotYUVHALwithCDS
-PrepareFeatureData() Feature2Mapping: FeatureName = Bayer2Yuv, numSessions = 1, numPipelines = 9 numPorts = 54
-PrepareFeatureData() session: 0, name: Bayer2Yuv, pipeline: 0, name: ZSLSnapshotYUVHAL
-PrepareFeatureData() Feature2Mapping: FeatureName = RawHDR, numSessions = 1, numPipelines = 1 numPorts = 7
-PrepareFeatureData() session: 0, name: RawHDR, pipeline: 0, name: SWMFMergeRaw
-PrepareFeatureData() Feature2Mapping: FeatureName = RealTime, numSessions = 1, numPipelines = 14 numPorts = 280
-PrepareFeatureData() session: 0, name: RealTime, pipeline: 0, name: ZSLPreviewRaw_LT1080p</code></pre>
-</details>
-针对部分feature instance，在进行pipeline拓扑优化时会有log，我们可以根据log推出大致拓扑prune结构和为什么disable部分portData中的端口，比如InternalZSLYuv2Jpeg,但是图中的HEIC_BLOB是不会配流的，因为和jpeg feature instance 的output stream不匹配
-
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">PruneUsecaseDescriptor</span>() InternalZSLYuv<span class="number">2</span>Jpeg Pruned Source target srcTargetIdx:<span class="number">0</span>, TARGET_BUFFER_CUSTOM_YUV numOfPort:<span class="number">1</span> portInfo:<span class="number">15</span>,<span class="number">0</span>,<span class="number">0</span></span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">2</span>)-&gt;DestNode(<span class="number">2</span>,<span class="number">2</span>,<span class="number">0</span>)</span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">15</span>,<span class="number">0</span>,<span class="number">2</span>)-&gt;DestNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">0</span>)</span><br><span class="line"><span class="attribute">chxusecaseutils</span>.cpp:<span class="number">2216</span> PruneUsecaseDescriptor() InternalZSLYuv<span class="number">2</span>Jpeg, Pruned LinkInfo sourceNode(<span class="number">15</span>,<span class="number">0</span>,<span class="number">3</span>)-&gt;DestNode(<span class="number">6</span>,<span class="number">0</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
-<p><img src="/images/feature2/pipeline-InternalZSLYuv2Jpeg.png" alt="alt"></p>
-<details>
-  <summary>给Usecase中的pipeline和PortData匹配以后的Target配流,log中包含result stream和 target stream</summary>
-
-<pre><code>//jpeg feature instance
-Jpeg_0 pushing inStream [0xb4000073e2c932c0 4160x3120] outStream [0xb400007402c81c48 4160x3120]
-
-//inStream
-InitializeTargetStream() JPEG: Target:TARGET_BUFFER_CUSTOM_YUV, PortKey:YUV_In:0:0:0:1 stream:target:0xb4000073e2c96c80:0xb4000073e2c932c0 Stream: 4160 X 3120:0x23:1:0x20022:7
-//outStream
-InitializeTargetStream() JPEG: Target:TARGET_BUFFER_SNAPSHOT, PortKey:JPEG_Out:0:0:0:3 stream:target:0xb4000073e2c8d520:0xb400007402c81c48 Stream: 4160 X 3120:0x21:0:0x3:2
-
-//HDR feature instance
-InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV_OUT, PortKey:YUV_Out_External:0:0:0:3 stream:target:0xb4000073e2c8c4f0: 0xb4000073e2c95160 Stream: 4160 X 3120:0x23:0:0x20022:2
-InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV0, PortKey:YUV_In1_Internal:0:0:1:0 stream:target:0xb4000073e2c93cd0:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
-InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV1, PortKey:YUV_In0_External:0:0:0:1 stream:target:0xb4000073e2c94590:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
-InitializeTargetStream() HDR: Target:TARGET_BUFFER_YUV2, PortKey:YUV_In3_Internal:0:0:3:0 stream:target:0xb4000073e2c942f0:0xb4000073e2c951d0 Stream: 4160 X 3120:0x23:1:0x20022:2
-
-//bayer2yuv CDS
-InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL, PortKey:YUV_Out:0:0:0:3 stream:target:0xb4000073e2c92840:0xb4000073e2c8d130 Stream: 4160 X 3120:0x23:0:0x0:2
-InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL2, PortKey:YUV_Out3:0:0:3:3 stream:target:0xb4000073e2c947c0:0xb4000073e2c97230 Stream: 4160 X 3120:0x23:0:0x0:7
-InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_RAW, PortKey:RDI_In:0:0:0:1 stream:target:0xb4000073e2c98260:0xb4000073e2c96dd0 Stream: 4208 X3120:0x25:1:0x20022:7
-
-//bayer2yuv
-InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL, PortKey:YUV_Out:0:0:0:3 stream:target:0xb4000073e2c967b0:0xb000073e2c933a0 Stream: 4160 X 3120:0x23:0:0x0:2
-InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL2, PortKey:YUV_Out3:0:0:3:3 stream:target:0xb4000073e2c96f90:0xb4000073e2c959b0 Stream: 4160 X 3120:0x23:0:0x0:7
-InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_YUV_HAL3, PortKey:YUV_Out2:0:0:2:3 stream:target:0xb4000073e2c97460:0xb4000073e2c97e70 Stream: 4160 X 3120:0x23:0:0x0:7
-InitializeTargetStream() Bayer2Yuv: Target:TARGET_BUFFER_RAW, PortKey:RDI_In:0:0:0:1 stream:target:0xb4000073e2c950f0:0xb4000073e2c95400 Stream: 4208 X3120:0x25:1:0x20022:7
-
-//RAWHDR feature instance
-InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_OUT, PortKey:RAW_Out_External:0:0:0:3 stream:target:0xb4000073e2c96c10:0xb4000073e2c979a0 Stream: 4208 X 3120:0x25:0:0x0:2
-InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN0, PortKey:RAW_In0_External:0:0:0:1  stream:target:0xb4000073e2c920d0:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
-InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN1, PortKey:RAW_In2_Internal:0:0:2:0 stream:target:0xb4000073e2c96120:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
-InitializeTargetStream() RawHDR: Target:TARGET_BUFFER_RAW_IN2, PortKey:RAW_In3_Internal:0:0:3:0 stream:target:0xb4000073e2c96eb0:0xb4000073e2c93800 Stream: 4208 X 3120:0x25:1:0x20022:5
-
-//RealTime feature instance
-InitializeTargetStream() RealTime: Target:TARGET_BUFFER_DISPLAY, PortKey:Display_Out:0:0:0:3 stream:target:0xb4000073e2c91110:0xb400007402c56488 Stream: 1440 X 1080:0x22:0:0x900:1
-InitializeTargetStream() RealTime: Target:TARGET_BUFFER_VIDEO, PortKey:Video_Out:0:0:3:3 stream:target:0xb4000073e2c92680:0xb4000073e2c95630 Stream: 1440 X 1080:0x23:0:0x0:3
-InitializeTargetStream() RealTime: Target:TARGET_BUFFER_RAW_OUT, PortKey:Raw_Out:0:0:1:3 stream:target:0xb4000073e2c926f0:0xb4000073e2c96580 Stream: 4208 X 3120:0x25:0:0x20002:8 
-InitializeTargetStream() RealTime: Target:TARGET_BUFFER_IDEAL_RAW, PortKey:IDEALRaw_Out:0:0:14:3 stream:target:0xb4000073e2c93870:0xb4000073e2c95780 Stream: 4096 X 3072:0x20:0:0x20002:2
-InitializeTargetStream() RealTime: Target:TARGET_BUFFER_POSTVIEW_OUT, PortKey:PostView_Out:0:0:7:3 stream:target:0xb4000073e2c95c50:0xb4000073e2c95710 Stream: 320 X 240:0x23:0:0x0:6
-InitializeTargetStream() RealTime: Target:TARGET_BUFFER_YUV_OUT, PortKey:Yuv_Out:0:0:6:3 stream:target:0xb4000073e2c91340:0xb4000073e2c97700 Stream: 640 X 480:0x23:0:0x0:7</code></pre>
-</details>
 ]]></content>
       <categories>
         <category>Camera-Driver</category>
