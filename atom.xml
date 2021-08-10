@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2021-04-15T07:47:35.362Z</updated>
+  <updated>2021-08-10T01:57:55.003Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -15,6 +15,39 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>内核实践1-linux5.12.0-rc8</title>
+    <link href="http://sholck.top/archives/8a2ade1b.html"/>
+    <id>http://sholck.top/archives/8a2ade1b.html</id>
+    <published>2021-08-10T14:00:00.000Z</published>
+    <updated>2021-08-10T01:57:55.003Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;内核实践1-linux5-12-0-rc8&quot;&gt;&lt;a href=&quot;#内核实践1-linux5-12-0-rc8&quot; class=&quot;headerlink&quot; title=&quot;内核实践1-linux5.12.0-rc8&quot;&gt;&lt;/a&gt;内核实践1-linux5.12.0-rc8&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;环境配置&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;编译&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;qemu-guest-run&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;gdb&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;BusyBox&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;参考&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux-kernel-make" scheme="http://sholck.top/tags/linux-kernel-make/"/>
+    
+    <category term="busybox" scheme="http://sholck.top/tags/busybox/"/>
+    
+    <category term="QEMU" scheme="http://sholck.top/tags/QEMU/"/>
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+  </entry>
   
   <entry>
     <title>Feature2-PCR</title>
@@ -82,16 +115,18 @@
     <link href="http://sholck.top/archives/8a2ade17.html"/>
     <id>http://sholck.top/archives/8a2ade17.html</id>
     <published>2021-03-09T14:00:00.000Z</published>
-    <updated>2021-04-15T07:47:35.362Z</updated>
+    <updated>2021-08-10T02:59:33.605Z</updated>
     
     
-    <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;下面是一些生产力工具&lt;/p&gt;
+    <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;下面是一些生产力工具&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Hexo&lt;/li&gt;
-&lt;li&gt;draw.io&lt;/li&gt;
-&lt;li&gt;vim/tmux/cscope/ctags/fzf/taglist/ag&lt;/li&gt;
-&lt;li&gt;HHKB types&lt;/li&gt;
-&lt;/ul&gt;</summary>
+&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;Hexo&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;draw.io&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;vim/tmux/cscope/ctags/fzf/taglist/ag&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;HHKB types&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;git&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;meld/diffuse&lt;/a&gt;</summary>
     
     
     
@@ -113,7 +148,7 @@
     <link href="http://sholck.top/archives/8a2ade16.html"/>
     <id>http://sholck.top/archives/8a2ade16.html</id>
     <published>2021-03-08T15:11:00.000Z</published>
-    <updated>2021-04-15T07:47:35.362Z</updated>
+    <updated>2021-08-10T02:58:12.214Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;session-flush-timeout学习&quot;&gt;&lt;a href=&quot;#session-flush-timeout学习&quot; class=&quot;headerlink&quot; title=&quot;session flush timeout学习&quot;&gt;&lt;/a&gt;session flush timeout学习&lt;/h1&gt;&lt;ul&gt;
@@ -140,7 +175,7 @@
     <link href="http://sholck.top/archives/8a2ade15.html"/>
     <id>http://sholck.top/archives/8a2ade15.html</id>
     <published>2020-11-03T07:26:29.000Z</published>
-    <updated>2021-04-15T07:47:35.362Z</updated>
+    <updated>2021-08-10T02:57:19.090Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;单-amp-双摄configure-stream流程&quot;&gt;&lt;a href=&quot;#单-amp-双摄configure-stream流程&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄configure stream流程&quot;&gt;&lt;/a&gt;单&amp;amp;双摄configure stream流程&lt;/h1&gt;&lt;ul&gt;
@@ -170,7 +205,7 @@
     <link href="http://sholck.top/archives/8a2ade14.html"/>
     <id>http://sholck.top/archives/8a2ade14.html</id>
     <published>2020-10-25T09:09:51.000Z</published>
-    <updated>2021-04-15T07:47:35.362Z</updated>
+    <updated>2021-08-10T02:58:40.942Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;单-amp-双摄预览控制流详解&quot;&gt;&lt;a href=&quot;#单-amp-双摄预览控制流详解&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄预览控制流详解&quot;&gt;&lt;/a&gt;单&amp;amp;双摄预览控制流详解&lt;/h1&gt;&lt;ul&gt;
@@ -180,7 +215,7 @@
 &lt;li&gt; Result返回&lt;/li&gt;
 &lt;/ul&gt;
 &lt;hr&gt;
-&lt;p&gt;下图是PCR下发在hal3，chi，camx之间的简单流程(需要重新check双摄usecase和advance,Feature的关系，图中并不包括文中描述的Result返回部分)&lt;br&gt;&lt;img src=&quot;/images/PCR-hal-chi-camx.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;
+&lt;p&gt;下图是PCR下发在hal3，chi，camx之间的简单流程(需要重新check双摄usecase和advance,Feature的关系，图中并不包括文中描述的Result返回部分)&lt;br&gt;&lt;img src=&quot;/images/Camx-Control-Stream/PCR-hal-chi-camx.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;
 &lt;hr&gt;
 &lt;h2 id=&quot;Request从hal3到chi&quot;&gt;&lt;a href=&quot;#Request从hal3到chi&quot; class=&quot;headerlink&quot; title=&quot;Request从hal3到chi&quot;&gt;&lt;/a&gt;Request从hal3到chi&lt;/h2&gt;&lt;html&gt;
 camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针接口进行赋值，其中的configure_streams和process_capture_request分别是进行配流和预览时进行调用的。</summary>
