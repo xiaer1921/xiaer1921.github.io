@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2021-12-02T15:03:14.765Z</updated>
+  <updated>2021-10-20T08:33:41.105Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="http://sholck.top/archives/8a2ade1b.html"/>
     <id>http://sholck.top/archives/8a2ade1b.html</id>
     <published>2021-08-10T14:00:00.000Z</published>
-    <updated>2021-12-02T15:03:14.765Z</updated>
+    <updated>2021-10-20T08:33:41.105Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;内核实践1-linux5-12-0-rc8&quot;&gt;&lt;a href=&quot;#内核实践1-linux5-12-0-rc8&quot; class=&quot;headerlink&quot; title=&quot;内核实践1-linux5.12.0-rc8&quot;&gt;&lt;/a&gt;内核实践1-linux5.12.0-rc8&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
@@ -54,7 +54,7 @@
     <link href="http://sholck.top/archives/8a2ade1a.html"/>
     <id>http://sholck.top/archives/8a2ade1a.html</id>
     <published>2021-04-08T08:16:00.000Z</published>
-    <updated>2021-12-02T15:03:14.765Z</updated>
+    <updated>2021-04-15T07:47:35.362Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Feature-PCR&quot;&gt;&lt;a href=&quot;#Feature-PCR&quot; class=&quot;headerlink&quot; title=&quot;Feature-PCR&quot;&gt;&lt;/a&gt;Feature-PCR&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
@@ -82,7 +82,7 @@
     <link href="http://sholck.top/archives/8a2ade19.html"/>
     <id>http://sholck.top/archives/8a2ade19.html</id>
     <published>2021-03-30T10:53:00.000Z</published>
-    <updated>2021-12-02T15:22:28.525Z</updated>
+    <updated>2021-12-07T01:28:19.105Z</updated>
     
     
       
@@ -109,7 +109,7 @@
     <link href="http://sholck.top/archives/8a2ade18.html"/>
     <id>http://sholck.top/archives/8a2ade18.html</id>
     <published>2021-03-23T17:03:00.000Z</published>
-    <updated>2021-12-02T15:03:14.765Z</updated>
+    <updated>2021-04-15T07:47:35.362Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Feature2&quot;&gt;&lt;a href=&quot;#Feature2&quot; class=&quot;headerlink&quot; title=&quot;Feature2&quot;&gt;&lt;/a&gt;Feature2&lt;/h1&gt;&lt;p&gt;当我们想要去实现特定功能的时候，我们需要使用FGM管理实现feature功能的各类组件 并根据feature拓扑创建对应的pipeline去实现，这些组件包括FGS,FPM,线程池，TBM。本篇文章将从feature组件的创建以及各组件的功能组合如何实现特定feature来描述，而关联&lt;a href=&quot;https://sholck.top/archives/8a2ade15.html&quot;&gt;底层的pipeline建立和node处理&lt;/a&gt;，&lt;a href=&quot;https://sholck.top/archives/8a2ade14.html&quot;&gt;PCR逻辑&lt;/a&gt;已经在其他文章详细描述，本文不再重新描述。&lt;/p&gt;
@@ -142,7 +142,7 @@
     <link href="http://sholck.top/archives/8a2ade17.html"/>
     <id>http://sholck.top/archives/8a2ade17.html</id>
     <published>2021-03-09T14:00:00.000Z</published>
-    <updated>2021-12-02T15:37:45.584Z</updated>
+    <updated>2021-12-07T01:28:19.105Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
@@ -176,7 +176,7 @@
     <link href="http://sholck.top/archives/8a2ade16.html"/>
     <id>http://sholck.top/archives/8a2ade16.html</id>
     <published>2021-03-08T15:11:00.000Z</published>
-    <updated>2021-12-02T15:03:14.765Z</updated>
+    <updated>2021-08-10T02:58:12.214Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;session-flush-timeout学习&quot;&gt;&lt;a href=&quot;#session-flush-timeout学习&quot; class=&quot;headerlink&quot; title=&quot;session flush timeout学习&quot;&gt;&lt;/a&gt;session flush timeout学习&lt;/h1&gt;&lt;ul&gt;
@@ -203,7 +203,7 @@
     <link href="http://sholck.top/archives/8a2ade15.html"/>
     <id>http://sholck.top/archives/8a2ade15.html</id>
     <published>2020-11-03T07:26:29.000Z</published>
-    <updated>2021-12-02T15:03:14.765Z</updated>
+    <updated>2021-08-10T02:57:19.090Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;单-amp-双摄configure-stream流程&quot;&gt;&lt;a href=&quot;#单-amp-双摄configure-stream流程&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄configure stream流程&quot;&gt;&lt;/a&gt;单&amp;amp;双摄configure stream流程&lt;/h1&gt;&lt;ul&gt;
@@ -233,7 +233,7 @@
     <link href="http://sholck.top/archives/8a2ade14.html"/>
     <id>http://sholck.top/archives/8a2ade14.html</id>
     <published>2020-10-25T09:09:51.000Z</published>
-    <updated>2021-12-02T15:03:14.765Z</updated>
+    <updated>2021-08-10T02:58:40.942Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;单-amp-双摄预览控制流详解&quot;&gt;&lt;a href=&quot;#单-amp-双摄预览控制流详解&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄预览控制流详解&quot;&gt;&lt;/a&gt;单&amp;amp;双摄预览控制流详解&lt;/h1&gt;&lt;ul&gt;
