@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2021-10-20T08:33:41.105Z</updated>
+  <updated>2022-03-30T09:15:21.011Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -17,21 +17,46 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>内核实践1-linux5.12.0-rc8</title>
-    <link href="http://sholck.top/archives/8a2ade1b.html"/>
-    <id>http://sholck.top/archives/8a2ade1b.html</id>
-    <published>2021-08-10T14:00:00.000Z</published>
-    <updated>2021-10-20T08:33:41.105Z</updated>
+    <title>内存泄露分析</title>
+    <link href="http://sholck.top/archives/7.html"/>
+    <id>http://sholck.top/archives/7.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:15:21.011Z</updated>
     
     
-    <summary type="html">&lt;h1 id=&quot;内核实践1-linux5-12-0-rc8&quot;&gt;&lt;a href=&quot;#内核实践1-linux5-12-0-rc8&quot; class=&quot;headerlink&quot; title=&quot;内核实践1-linux5.12.0-rc8&quot;&gt;&lt;/a&gt;内核实践1-linux5.12.0-rc8&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+    <summary type="html">&lt;h1 id=&quot;内存泄露分析&quot;&gt;&lt;a href=&quot;#内存泄露分析&quot; class=&quot;headerlink&quot; title=&quot;内存泄露分析&quot;&gt;&lt;/a&gt;内存泄露分析&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;N项目超级夜景模式泄露内存，且泄露内存较大，大概每次19M&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="memory" scheme="http://sholck.top/categories/memory/"/>
+    
+    
+    <category term="strace" scheme="http://sholck.top/tags/strace/"/>
+    
+    <category term="syscall" scheme="http://sholck.top/tags/syscall/"/>
+    
+    <category term="smap" scheme="http://sholck.top/tags/smap/"/>
+    
+    <category term="内存泄露" scheme="http://sholck.top/tags/%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/"/>
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>linux内核开发学习手册-内核许可证</title>
+    <link href="http://sholck.top/archives/10.html"/>
+    <id>http://sholck.top/archives/10.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:22:41.494Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;a href=&quot;#linux内核开发学习手册-内核许可证&quot; class=&quot;headerlink&quot; title=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;/a&gt;linux内核开发学习手册-内核许可证&lt;/h1&gt;&lt;p&gt;原文见：内核开发文档-Linux kernel licensing rules(Linux内核许可规则)&lt;/p&gt;
+&lt;h2 id=&quot;内核通用许可证&quot;&gt;&lt;a href=&quot;#内核通用许可证&quot; class=&quot;headerlink&quot; title=&quot;内核通用许可证&quot;&gt;&lt;/a&gt;内核通用许可证&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;linux内核虽然是开源的，但是为了避免开发者的心血被不良厂商赚取利益等和保护开源环境，因此是有基于GPL-2.0() 的通用公共许可证作为法律保护的，具体的描述见&lt;font color=#2196F3 &gt;COPYING&lt;/font&gt;文件。&lt;/li&gt;
+&lt;/ul&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;环境配置&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;编译&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;qemu-guest-run&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;gdb&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;BusyBox&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;参考&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;所有的内核源文件都需要标志许可证，而且这个许可证是可以与GPL-2.0兼容的，但是UAPI是作为例外的，因为是非内核的软件如果与内核通信，需要包含此头文件，但是我们不能要求该通信软件也受此许可证限制，因此此类特殊的例外许可描述也会被记录。&lt;/li&gt;
 &lt;/ul&gt;</summary>
     
     
@@ -39,110 +64,230 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
-    <category term="linux-kernel-make" scheme="http://sholck.top/tags/linux-kernel-make/"/>
+    <category term="linux哲学" scheme="http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>内核开发学习手册-内核驱动接口</title>
+    <link href="http://sholck.top/archives/9.html"/>
+    <id>http://sholck.top/archives/9.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:22:53.618Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;a href=&quot;#内核开发学习手册-内核驱动接口&quot; class=&quot;headerlink&quot; title=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;/a&gt;内核开发学习手册-内核驱动接口&lt;/h1&gt;&lt;p&gt;针对内核，无论是开发还是用户，我们所希望的是稳定的驱动功能，而稳定的驱动和有稳定的内核接口之间的联系，需要我们去思考，有助于理解linux的开发哲学。&lt;/p&gt;
+&lt;p&gt;下文解释了：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;内核没有二进制内核接口&lt;/li&gt;
+&lt;li&gt;内核的源代码接口不稳定</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux哲学" scheme="http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>程序分析利器gdb</title>
+    <link href="http://sholck.top/archives/3.html"/>
+    <id>http://sholck.top/archives/3.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:23:57.918Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;程序分析利器gdb&quot;&gt;&lt;a href=&quot;#程序分析利器gdb&quot; class=&quot;headerlink&quot; title=&quot;程序分析利器gdb&quot;&gt;&lt;/a&gt;程序分析利器gdb&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;通过gdb可以分析进程在运行和crash的内部状态，根据man手册描述有以下作用&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt; 控制进程的开始和结束&lt;/li&gt;
+&lt;li&gt; 设置进程暂停的条件&lt;/li&gt;
+&lt;li&gt; 检查进程暂停时的堆栈等信息&lt;/li&gt;
+&lt;li&gt; 改变程序变量等因素影响程序&lt;/li&gt;
+&lt;/ol&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+    <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
+    
+    <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sysdump学习</title>
+    <link href="http://sholck.top/archives/4.html"/>
+    <id>http://sholck.top/archives/4.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:24:28.514Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;sysdump学习&quot;&gt;&lt;a href=&quot;#sysdump学习&quot; class=&quot;headerlink&quot; title=&quot;sysdump学习&quot;&gt;&lt;/a&gt;sysdump学习&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;sysdump为dump system memory，也称内核转储。在内核发生异常时，通过kexec和kdump，将内存和寄存器信息保存，在重启以后的uboot阶段将信息转储到文件中。我们能够通过转储文件发现异常发生的根本原因。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
+    
+    <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
+    
+    <category term="sysdump" scheme="http://sholck.top/tags/sysdump/"/>
+    
+    <category term="crash" scheme="http://sholck.top/tags/crash/"/>
+    
+    <category term="kdump" scheme="http://sholck.top/tags/kdump/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>程序分析利器perf</title>
+    <link href="http://sholck.top/archives/6.html"/>
+    <id>http://sholck.top/archives/6.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:24:07.854Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;程序分析利器perf&quot;&gt;&lt;a href=&quot;#程序分析利器perf&quot; class=&quot;headerlink&quot; title=&quot;程序分析利器perf&quot;&gt;&lt;/a&gt;程序分析利器perf&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;全称为performance counter，是一个linux内核实现的框架来进行性能分析，覆盖了硬件CPU/PMU和（软件计数器，监测点）之类的特性。&lt;/p&gt;
+&lt;p&gt;本文重点介绍perf的使用和实践，不对原理性知识进行讲解&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
+    
+    <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
+    
+    <category term="perf" scheme="http://sholck.top/tags/perf/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>程序分析利器strace</title>
+    <link href="http://sholck.top/archives/5.html"/>
+    <id>http://sholck.top/archives/5.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:24:18.886Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;程序分析利器strace&quot;&gt;&lt;a href=&quot;#程序分析利器strace&quot; class=&quot;headerlink&quot; title=&quot;程序分析利器strace&quot;&gt;&lt;/a&gt;程序分析利器strace&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;strace可以通过捕捉记录正在运行进程的系统调用和信号来进行程序分析，既然是系统调用，因此shell脚本和应用程序都可以通过strace来调试分析。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="strace" scheme="http://sholck.top/tags/strace/"/>
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
+    
+    <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>内核补丁提交</title>
+    <link href="http://sholck.top/archives/8.html"/>
+    <id>http://sholck.top/archives/8.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:23:41.270Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;内核补丁提交&quot;&gt;&lt;a href=&quot;#内核补丁提交&quot; class=&quot;headerlink&quot; title=&quot;内核补丁提交&quot;&gt;&lt;/a&gt;内核补丁提交&lt;/h1&gt;&lt;p&gt;本文将总结介绍提交内核补丁前的须知规范&lt;/p&gt;
+&lt;p&gt;linux官方文档下有详细的关于此部分的描述&lt;a href=&quot;https://www.kernel.org/doc/html/v5.9/translations/zh_CN/process/index.html&quot;&gt;与Linux 内核社区一起工作&lt;/a&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="mailing list" scheme="http://sholck.top/tags/mailing-list/"/>
+    
+    <category term="IRC" scheme="http://sholck.top/tags/IRC/"/>
+    
+    <category term="patchwork" scheme="http://sholck.top/tags/patchwork/"/>
+    
+    <category term="bugzilla" scheme="http://sholck.top/tags/bugzilla/"/>
+    
+    <category term="sparse" scheme="http://sholck.top/tags/sparse/"/>
+    
+    <category term="coccinelle" scheme="http://sholck.top/tags/coccinelle/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>内核实践-linux5.12.0-rc8</title>
+    <link href="http://sholck.top/archives/2.html"/>
+    <id>http://sholck.top/archives/2.html</id>
+    <published>2021-08-10T14:00:00.000Z</published>
+    <updated>2022-03-30T09:23:34.542Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;内核实践-linux5-12-0-rc8&quot;&gt;&lt;a href=&quot;#内核实践-linux5-12-0-rc8&quot; class=&quot;headerlink&quot; title=&quot;内核实践-linux5.12.0-rc8&quot;&gt;&lt;/a&gt;内核实践-linux5.12.0-rc8&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;环境配置&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;编译&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;qemu-guest-run&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;gdb&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;BusyBox&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;Crash&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#7&quot;&gt;参考&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+    <category term="内核编译" scheme="http://sholck.top/tags/%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91/"/>
     
     <category term="busybox" scheme="http://sholck.top/tags/busybox/"/>
     
     <category term="QEMU" scheme="http://sholck.top/tags/QEMU/"/>
     
-    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Feature2-PCR</title>
-    <link href="http://sholck.top/archives/8a2ade1a.html"/>
-    <id>http://sholck.top/archives/8a2ade1a.html</id>
-    <published>2021-04-08T08:16:00.000Z</published>
-    <updated>2021-04-15T07:47:35.362Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;Feature-PCR&quot;&gt;&lt;a href=&quot;#Feature-PCR&quot; class=&quot;headerlink&quot; title=&quot;Feature-PCR&quot;&gt;&lt;/a&gt;Feature-PCR&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;需要了解的知识&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;普通预览代码流程追踪&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;状态机&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;a id=&quot;1&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;需要了解的知识&quot;&gt;&lt;a href=&quot;#需要了解的知识&quot; class=&quot;headerlink&quot; title=&quot;需要了解的知识&quot;&gt;&lt;/a&gt;需要了解的知识&lt;/h2&gt;&lt;p&gt;预览和拍照的PCR不同在于：当触发一次拍照时，预览下发的request中的outputBuffer中为2, Capture Intent设置为capture,共用同一个frame_number,一般预览outputBuffer为1.因此拍照可以当作一次特殊的预览。  &lt;/p&gt;</summary>
-    
-    
-    
-    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
-    
-    
-    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
-    
-    <category term="Feature2" scheme="http://sholck.top/tags/Feature2/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Camx-Feature2-featureInstanceConnect</title>
-    <link href="http://sholck.top/archives/8a2ade19.html"/>
-    <id>http://sholck.top/archives/8a2ade19.html</id>
-    <published>2021-03-30T10:53:00.000Z</published>
-    <updated>2021-12-07T01:28:19.105Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;Camx-Feature2-featureInstanceConnect&quot;&gt;&lt;a href=&quot;#Camx-Feature2-featureInstanceConnect&quot; class=&quot;headerlink&quot;</summary>
-        
-      
-    
-    
-    
-    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
-    
-    
-    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
-    
-    <category term="Feature2" scheme="http://sholck.top/tags/Feature2/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Camx-Feature2</title>
-    <link href="http://sholck.top/archives/8a2ade18.html"/>
-    <id>http://sholck.top/archives/8a2ade18.html</id>
-    <published>2021-03-23T17:03:00.000Z</published>
-    <updated>2021-04-15T07:47:35.362Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;Feature2&quot;&gt;&lt;a href=&quot;#Feature2&quot; class=&quot;headerlink&quot; title=&quot;Feature2&quot;&gt;&lt;/a&gt;Feature2&lt;/h1&gt;&lt;p&gt;当我们想要去实现特定功能的时候，我们需要使用FGM管理实现feature功能的各类组件 并根据feature拓扑创建对应的pipeline去实现，这些组件包括FGS,FPM,线程池，TBM。本篇文章将从feature组件的创建以及各组件的功能组合如何实现特定feature来描述，而关联&lt;a href=&quot;https://sholck.top/archives/8a2ade15.html&quot;&gt;底层的pipeline建立和node处理&lt;/a&gt;，&lt;a href=&quot;https://sholck.top/archives/8a2ade14.html&quot;&gt;PCR逻辑&lt;/a&gt;已经在其他文章详细描述，本文不再重新描述。&lt;/p&gt;
-&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;feature2框架介绍&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;configure_stream&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;feature instance连接&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;feature-PCR&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;TBM详解&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;TM详解&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;a id=&quot;1&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;feature2框架介绍&quot;&gt;&lt;a href=&quot;#feature2框架介绍&quot; class=&quot;headerlink&quot; title=&quot;feature2框架介绍&quot;&gt;&lt;/a&gt;feature2框架介绍&lt;/h2&gt;&lt;p&gt;下图feature2大致的组件框架。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;/images/feature2/feature2-frame.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
-    
-    
-    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
-    
-    <category term="Feature2" scheme="http://sholck.top/tags/Feature2/"/>
-    
   </entry>
   
   <entry>
     <title>生产力工具记录</title>
-    <link href="http://sholck.top/archives/8a2ade17.html"/>
-    <id>http://sholck.top/archives/8a2ade17.html</id>
+    <link href="http://sholck.top/archives/1.html"/>
+    <id>http://sholck.top/archives/1.html</id>
     <published>2021-03-09T14:00:00.000Z</published>
-    <updated>2021-12-07T01:28:19.105Z</updated>
+    <updated>2022-03-30T09:25:00.694Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
@@ -168,94 +313,6 @@
     <category term="draw.io" scheme="http://sholck.top/tags/draw-io/"/>
     
     <category term="fzf" scheme="http://sholck.top/tags/fzf/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>session flush timeout学习</title>
-    <link href="http://sholck.top/archives/8a2ade16.html"/>
-    <id>http://sholck.top/archives/8a2ade16.html</id>
-    <published>2021-03-08T15:11:00.000Z</published>
-    <updated>2021-08-10T02:58:12.214Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;session-flush-timeout学习&quot;&gt;&lt;a href=&quot;#session-flush-timeout学习&quot; class=&quot;headerlink&quot; title=&quot;session flush timeout学习&quot;&gt;&lt;/a&gt;session flush timeout学习&lt;/h1&gt;&lt;ul&gt;
-&lt;li&gt;背景&lt;/li&gt;
-&lt;li&gt;超时处理流程&lt;/li&gt;
-&lt;li&gt;Condition处理&lt;/li&gt;
-&lt;li&gt;扩展&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;之前做过的mtkcam或者camx,都有对timeout进行调整的处理。当前碰到一个拍照没有图片返回的案例，故对这个案例进行分析。&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
-    
-    
-    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
-    
-    <category term="flush" scheme="http://sholck.top/tags/flush/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>单&amp;双摄configure stream流程</title>
-    <link href="http://sholck.top/archives/8a2ade15.html"/>
-    <id>http://sholck.top/archives/8a2ade15.html</id>
-    <published>2020-11-03T07:26:29.000Z</published>
-    <updated>2021-08-10T02:57:19.090Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;单-amp-双摄configure-stream流程&quot;&gt;&lt;a href=&quot;#单-amp-双摄configure-stream流程&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄configure stream流程&quot;&gt;&lt;/a&gt;单&amp;amp;双摄configure stream流程&lt;/h1&gt;&lt;ul&gt;
-&lt;li&gt;advance/feature2&lt;/li&gt;
-&lt;li&gt;hal3 callback chi&lt;/li&gt;
-&lt;li&gt;单摄usecase初始化处理&lt;/li&gt;
-&lt;li&gt;双摄usecase初始化处理&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&quot;advance-feature2&quot;&gt;&lt;a href=&quot;#advance-feature2&quot; class=&quot;headerlink&quot; title=&quot;advance/feature2&quot;&gt;&lt;/a&gt;advance/feature2&lt;/h2&gt;&lt;p&gt;为什么起名为advance(提前)，代码架构直观可以发现一部分pipeline和node在FGM的pipeline和node之前创建。因此整个configure_stream大体上其实可以分为两个流程。&lt;br&gt;1.在SelectUsecaseConfig之后直接通过CameraUsecaseBase::Initialize去CreatePipeline的部分，这部分属于advance&lt;br&gt;2.PostUsecaseCreation去创建FGM,FGS,拿到FGD map,创建FPM，拿到全部feature instance的cap.之后对需要的每一个feature instance去initizlize,configure，最终创建pipeline，状态机成为Finalized.  &lt;/p&gt;
-&lt;p&gt;因此，把advance/feature2这部分放在首节，本文只针对advance 和 usecasemc部分描述，尽量不涉及feature部分&lt;/p&gt;
-&lt;h2 id=&quot;hal3-callback-chi&quot;&gt;&lt;a href=&quot;#hal3-callback-chi&quot; class=&quot;headerlink&quot; title=&quot;hal3 callback chi&quot;&gt;&lt;/a&gt;hal3 callback chi&lt;/h2&gt;&lt;p&gt;configure_stream 和process_capture_request 都是framework下发，通过hal3处理，callback chi。process_capture_results则是由camx node 在PCR处理中主动callback.&lt;br&gt;process_capture_request 和 process_capture_result见双摄预览控制流程详解。&lt;/p&gt;
-&lt;p&gt;configure_stream入口为camxhal3entry.cpp,通过pHAL3-&amp;gt;configure_streams进入hal3处理，hal3中调用pHALDevice-&amp;gt;ConfigureStreams，在HALDevice::ConfigureStreams中主要进行三个处理.&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
-    
-    
-    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
-    
-    <category term="configure_stream" scheme="http://sholck.top/tags/configure-stream/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>单&amp;双摄预览控制流详解</title>
-    <link href="http://sholck.top/archives/8a2ade14.html"/>
-    <id>http://sholck.top/archives/8a2ade14.html</id>
-    <published>2020-10-25T09:09:51.000Z</published>
-    <updated>2021-08-10T02:58:40.942Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;单-amp-双摄预览控制流详解&quot;&gt;&lt;a href=&quot;#单-amp-双摄预览控制流详解&quot; class=&quot;headerlink&quot; title=&quot;单&amp;amp;双摄预览控制流详解&quot;&gt;&lt;/a&gt;单&amp;amp;双摄预览控制流详解&lt;/h1&gt;&lt;ul&gt;
-&lt;li&gt; Request从hal3到chi&lt;/li&gt;
-&lt;li&gt; chi端request双摄处理流程&lt;/li&gt;
-&lt;li&gt; camx端request双摄处理流程&lt;/li&gt;
-&lt;li&gt; Result返回&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr&gt;
-&lt;p&gt;下图是PCR下发在hal3，chi，camx之间的简单流程(需要重新check双摄usecase和advance,Feature的关系，图中并不包括文中描述的Result返回部分)&lt;br&gt;&lt;img src=&quot;/images/Camx-Control-Stream/PCR-hal-chi-camx.png&quot; alt=&quot;alt&quot;&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;Request从hal3到chi&quot;&gt;&lt;a href=&quot;#Request从hal3到chi&quot; class=&quot;headerlink&quot; title=&quot;Request从hal3到chi&quot;&gt;&lt;/a&gt;Request从hal3到chi&lt;/h2&gt;&lt;html&gt;
-camxhal3.cpp中的g_jumpTableHAL3是framework与hal3的接口，对函数指针接口进行赋值，其中的configure_streams和process_capture_request分别是进行配流和预览时进行调用的。</summary>
-    
-    
-    
-    <category term="Camera-Driver" scheme="http://sholck.top/categories/Camera-Driver/"/>
-    
-    
-    <category term="Camera-Camx" scheme="http://sholck.top/tags/Camera-Camx/"/>
-    
-    <category term="PCR" scheme="http://sholck.top/tags/PCR/"/>
     
   </entry>
   

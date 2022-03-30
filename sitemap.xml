@@ -2,6 +2,83 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://sholck.top/archives/1.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/4.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/5.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/6.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/3.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/8.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/2.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/9.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/10.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/archives/7.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/project/index.html</loc>
+    
+    <lastmod>2022-03-30</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://sholck.top/about/index.html</loc>
     
     <lastmod>2021-12-07</lastmod>
@@ -9,70 +86,7 @@
   </url>
   
   <url>
-    <loc>http://sholck.top/archives/8a2ade19.html</loc>
-    
-    <lastmod>2021-12-07</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/archives/8a2ade17.html</loc>
-    
-    <lastmod>2021-12-07</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/archives/8a2ade1b.html</loc>
-    
-    <lastmod>2021-10-20</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/archives/8a2ade14.html</loc>
-    
-    <lastmod>2021-08-10</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/archives/8a2ade16.html</loc>
-    
-    <lastmod>2021-08-10</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/archives/8a2ade15.html</loc>
-    
-    <lastmod>2021-08-10</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/project/index.html</loc>
-    
-    <lastmod>2021-04-15</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://sholck.top/tags/index.html</loc>
-    
-    <lastmod>2021-04-15</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/archives/8a2ade18.html</loc>
-    
-    <lastmod>2021-04-15</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/archives/8a2ade1a.html</loc>
     
     <lastmod>2021-04-15</lastmod>
     
@@ -88,99 +102,197 @@
 
   <url>
     <loc>http://sholck.top/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   
   <url>
-    <loc>http://sholck.top/tags/linux-kernel-make/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <loc>http://sholck.top/tags/strace/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://sholck.top/tags/busybox/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <loc>http://sholck.top/tags/syscall/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://sholck.top/tags/QEMU/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <loc>http://sholck.top/tags/smap/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://sholck.top/tags/gdb/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <loc>http://sholck.top/tags/%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://sholck.top/tags/Camera-Camx/</loc>
-    <lastmod>2021-12-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/tags/Feature2/</loc>
-    <lastmod>2021-12-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/tags/flush/</loc>
-    <lastmod>2021-12-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/tags/configure-stream/</loc>
-    <lastmod>2021-12-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/tags/PCR/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <loc>http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://sholck.top/tags/vim/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://sholck.top/tags/hexo/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://sholck.top/tags/draw-io/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://sholck.top/tags/fzf/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/linux/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/gdb/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/kernel-tool/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/sysdump/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/crash/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/kdump/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/perf/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/busybox/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/QEMU/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/mailing-list/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/IRC/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/patchwork/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/bugzilla/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/sparse/</loc>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/tags/coccinelle/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -188,22 +300,22 @@
 
   
   <url>
-    <loc>http://sholck.top/categories/linux/</loc>
-    <lastmod>2021-12-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://sholck.top/categories/Camera-Driver/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <loc>http://sholck.top/categories/memory/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://sholck.top/categories/%E7%94%9F%E4%BA%A7%E5%8A%9B%E5%B7%A5%E5%85%B7/</loc>
-    <lastmod>2021-12-07</lastmod>
+    <lastmod>2022-03-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://sholck.top/categories/linux/</loc>
+    <lastmod>2022-03-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
