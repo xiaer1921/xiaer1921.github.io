@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-03-30T09:15:21.011Z</updated>
+  <updated>2022-03-31T10:12:19.363Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>动态模块加载异常</title>
+    <link href="http://sholck.top/archives/11.html"/>
+    <id>http://sholck.top/archives/11.html</id>
+    <published>2022-03-30T16:00:00.000Z</published>
+    <updated>2022-03-31T10:12:19.363Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;动态模块加载异常&quot;&gt;&lt;a href=&quot;#动态模块加载异常&quot; class=&quot;headerlink&quot; title=&quot;动态模块加载异常&quot;&gt;&lt;/a&gt;动态模块加载异常&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;动态模块加载，出现以下异常&lt;/p&gt;
+&lt;figure class=&quot;highlight applescript&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;disagrees &lt;span class=&quot;keyword&quot;&gt;about&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;version&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;of&lt;/span&gt; symbol module_layout&lt;span class=&quot;string&quot;&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="linux-module" scheme="http://sholck.top/tags/linux-module/"/>
+    
+    <category term="insmod" scheme="http://sholck.top/tags/insmod/"/>
+    
+  </entry>
   
   <entry>
     <title>内存泄露分析</title>
@@ -96,6 +120,38 @@
   </entry>
   
   <entry>
+    <title>内核补丁提交</title>
+    <link href="http://sholck.top/archives/8.html"/>
+    <id>http://sholck.top/archives/8.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:23:41.270Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;内核补丁提交&quot;&gt;&lt;a href=&quot;#内核补丁提交&quot; class=&quot;headerlink&quot; title=&quot;内核补丁提交&quot;&gt;&lt;/a&gt;内核补丁提交&lt;/h1&gt;&lt;p&gt;本文将总结介绍提交内核补丁前的须知规范&lt;/p&gt;
+&lt;p&gt;linux官方文档下有详细的关于此部分的描述&lt;a href=&quot;https://www.kernel.org/doc/html/v5.9/translations/zh_CN/process/index.html&quot;&gt;与Linux 内核社区一起工作&lt;/a&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="mailing list" scheme="http://sholck.top/tags/mailing-list/"/>
+    
+    <category term="IRC" scheme="http://sholck.top/tags/IRC/"/>
+    
+    <category term="patchwork" scheme="http://sholck.top/tags/patchwork/"/>
+    
+    <category term="bugzilla" scheme="http://sholck.top/tags/bugzilla/"/>
+    
+    <category term="sparse" scheme="http://sholck.top/tags/sparse/"/>
+    
+    <category term="coccinelle" scheme="http://sholck.top/tags/coccinelle/"/>
+    
+  </entry>
+  
+  <entry>
     <title>程序分析利器gdb</title>
     <link href="http://sholck.top/archives/3.html"/>
     <id>http://sholck.top/archives/3.html</id>
@@ -125,37 +181,6 @@
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
     <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>sysdump学习</title>
-    <link href="http://sholck.top/archives/4.html"/>
-    <id>http://sholck.top/archives/4.html</id>
-    <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-03-30T09:24:28.514Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;sysdump学习&quot;&gt;&lt;a href=&quot;#sysdump学习&quot; class=&quot;headerlink&quot; title=&quot;sysdump学习&quot;&gt;&lt;/a&gt;sysdump学习&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;sysdump为dump system memory，也称内核转储。在内核发生异常时，通过kexec和kdump，将内存和寄存器信息保存，在重启以后的uboot阶段将信息转储到文件中。我们能够通过转储文件发现异常发生的根本原因。&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
-    
-    
-    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
-    
-    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
-    
-    <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
-    
-    <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
-    
-    <category term="sysdump" scheme="http://sholck.top/tags/sysdump/"/>
-    
-    <category term="crash" scheme="http://sholck.top/tags/crash/"/>
-    
-    <category term="kdump" scheme="http://sholck.top/tags/kdump/"/>
     
   </entry>
   
@@ -215,34 +240,33 @@
   </entry>
   
   <entry>
-    <title>内核补丁提交</title>
-    <link href="http://sholck.top/archives/8.html"/>
-    <id>http://sholck.top/archives/8.html</id>
+    <title>sysdump学习</title>
+    <link href="http://sholck.top/archives/4.html"/>
+    <id>http://sholck.top/archives/4.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-03-30T09:23:41.270Z</updated>
+    <updated>2022-03-30T09:24:28.514Z</updated>
     
     
-    <summary type="html">&lt;h1 id=&quot;内核补丁提交&quot;&gt;&lt;a href=&quot;#内核补丁提交&quot; class=&quot;headerlink&quot; title=&quot;内核补丁提交&quot;&gt;&lt;/a&gt;内核补丁提交&lt;/h1&gt;&lt;p&gt;本文将总结介绍提交内核补丁前的须知规范&lt;/p&gt;
-&lt;p&gt;linux官方文档下有详细的关于此部分的描述&lt;a href=&quot;https://www.kernel.org/doc/html/v5.9/translations/zh_CN/process/index.html&quot;&gt;与Linux 内核社区一起工作&lt;/a&gt;&lt;/p&gt;</summary>
+    <summary type="html">&lt;h1 id=&quot;sysdump学习&quot;&gt;&lt;a href=&quot;#sysdump学习&quot; class=&quot;headerlink&quot; title=&quot;sysdump学习&quot;&gt;&lt;/a&gt;sysdump学习&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;sysdump为dump system memory，也称内核转储。在内核发生异常时，通过kexec和kdump，将内存和寄存器信息保存，在重启以后的uboot阶段将信息转储到文件中。我们能够通过转储文件发现异常发生的根本原因。&lt;/p&gt;</summary>
     
     
     
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
-    <category term="mailing list" scheme="http://sholck.top/tags/mailing-list/"/>
+    <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
-    <category term="IRC" scheme="http://sholck.top/tags/IRC/"/>
+    <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
     
-    <category term="patchwork" scheme="http://sholck.top/tags/patchwork/"/>
+    <category term="sysdump" scheme="http://sholck.top/tags/sysdump/"/>
     
-    <category term="bugzilla" scheme="http://sholck.top/tags/bugzilla/"/>
+    <category term="crash" scheme="http://sholck.top/tags/crash/"/>
     
-    <category term="sparse" scheme="http://sholck.top/tags/sparse/"/>
-    
-    <category term="coccinelle" scheme="http://sholck.top/tags/coccinelle/"/>
+    <category term="kdump" scheme="http://sholck.top/tags/kdump/"/>
     
   </entry>
   
@@ -272,13 +296,13 @@
     
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
-    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
-    
     <category term="内核编译" scheme="http://sholck.top/tags/%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91/"/>
     
     <category term="busybox" scheme="http://sholck.top/tags/busybox/"/>
     
     <category term="QEMU" scheme="http://sholck.top/tags/QEMU/"/>
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
     
   </entry>
   

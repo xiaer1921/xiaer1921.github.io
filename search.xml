@@ -163,6 +163,46 @@
       </tags>
   </entry>
   <entry>
+    <title>动态模块加载异常</title>
+    <url>/archives/11.html</url>
+    <content><![CDATA[<h1 id="动态模块加载异常"><a href="#动态模块加载异常" class="headerlink" title="动态模块加载异常"></a>动态模块加载异常</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>动态模块加载，出现以下异常</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">disagrees <span class="keyword">about</span> <span class="built_in">version</span> <span class="keyword">of</span> symbol module_layout<span class="string">&quot;</span></span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+<hr>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>kernel编译会生成vmlinux.symvers和Module.symvers两部分记录vmlinuz和模块的接口的symbol，动态模块编译时会生成xxx.mod.c，其中记录了动态模块用到的接口symbol，在加载模块时会去匹配接口的symbol是否和Module.symvers记录的一致，如果不一致，则提示错误。</p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>动态模块xxx.mod.c中的module_layout symbol</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">modversion_info</span> ____<span class="title">versions</span>[]    </span></span><br><span class="line"><span class="class">__<span class="title">used</span> __<span class="title">section</span>(&quot;__<span class="title">versions</span>&quot;) =</span> &#123;    </span><br><span class="line">        &#123; <span class="number">0x97f53857</span>, <span class="string">&quot;module_layout&quot;</span> &#125;,    </span><br><span class="line">        &#123; <span class="number">0x92997ed8</span>, <span class="string">&quot;_printk&quot;</span> &#125;,    </span><br><span class="line">        &#123; <span class="number">0xbdfb6dbb</span>, <span class="string">&quot;__fentry__&quot;</span> &#125;,    </span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
+
+<p>内核vmlinux.symvers中的module_layout symbol</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">0x4709b79f</span>      module_layout   vmlinux EXPORT_SYMBOL </span><br></pre></td></tr></table></figure>
+
+<p>内核Module.symvers中的module_layout symbol</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">0x97f53857</span>      module_layout   vmlinux EXPORT_SYMBOL</span><br></pre></td></tr></table></figure>
+
+<p>发现动态模块中的和Module.symvers的一致，但是和vmlinux.symvers的不一致，而每一次make bzImage都会导致vmlinux.symvers更新，不会去生成更新Module.symvers，导致Module.symvers symbol过旧，因此需要重新make modules</p>
+<h2 id="代码部分"><a href="#代码部分" class="headerlink" title="代码部分"></a>代码部分</h2><p>实现逻辑见kernel/module.c ,通过CONFIG_MODVERSIONS来编译控制</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">return</span> check_version(info, <span class="string">&quot;module_layout&quot;</span>, mod, fsa.crc); </span><br></pre></td></tr></table></figure>
+
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><ul>
+<li>第一种：make modules，重新动态模块编译</li>
+<li>第二种：更新.config，删除CONFIG_MODVERSIONS</li>
+</ul>
+<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2><h3 id="插入模块"><a href="#插入模块" class="headerlink" title="插入模块"></a>插入模块</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">➜  initramfs modinfo /github/busybox/initramfs/x86-busybox-rootfs/hello.ko</span><br><span class="line">filename:       /github/busybox/initramfs/x86-busybox-rootfs/hello.ko</span><br><span class="line">license:        Dual BSD/GPL</span><br><span class="line">srcversion:     <span class="number">89</span>A8475A71641B4AAA82542</span><br><span class="line">depends:        </span><br><span class="line">retpoline:      Y</span><br><span class="line">name:           hello</span><br><span class="line">vermagic:       <span class="number">5.17</span><span class="number">.0</span>+ SMP preempt mod_unload </span><br><span class="line"></span><br><span class="line">➜  initramfs qemu-system-x86_64 -m <span class="number">1024</span>  -smp <span class="number">2</span>  -hda rootfs.img  -kernel /github/busybox/initramfs/x86-busybox-rootfs/vmlinuz<span class="number">-5.17</span><span class="number">.0</span>+    -s -append <span class="string">&quot;root=/dev/sda rdinit=init crashkernel=128M console=ttyS0 rw&quot;</span> -nographic</span><br><span class="line">...</span><br><span class="line">/ # ./init</span><br><span class="line"></span><br><span class="line">Boot took <span class="number">15.51</span> seconds</span><br><span class="line"></span><br><span class="line">/ <span class="meta"># insmod hello.ko</span></span><br><span class="line">[   <span class="number">22.306823</span>] random: fast init done</span><br><span class="line">[   <span class="number">22.322005</span>] hello: loading out-of-tree <span class="keyword">module</span> taints kernel.</span><br><span class="line">[   <span class="number">22.323224</span>] hello: <span class="keyword">module</span> verification failed: signature <span class="keyword">and</span>/<span class="keyword">or</span> required key missing - tainting kernel</span><br><span class="line">[   <span class="number">22.327473</span>] Hello, world</span><br><span class="line"></span><br><span class="line">/ <span class="meta"># lsmod | grep -n <span class="meta-string">&quot;hello&quot;</span></span></span><br><span class="line"><span class="number">1</span>:hello <span class="number">16384</span> <span class="number">0</span> - Live <span class="number">0xffffffffc00bb000</span> (OE)</span><br><span class="line">/ <span class="meta"># cat /proc/modules </span></span><br><span class="line">hello <span class="number">16384</span> <span class="number">0</span> - Live <span class="number">0xffffffffc0369000</span> (OE)</span><br></pre></td></tr></table></figure>
+
+<h3 id="卸载模块"><a href="#卸载模块" class="headerlink" title="卸载模块"></a>卸载模块</h3><p>modprobe -r 会在/lib/module/$(uname -r) 下去寻找卸载的模块</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">/ <span class="meta"># mkdir -p /lib/modules/5.17.0+</span></span><br><span class="line">/ <span class="meta"># cd /lib/modules/5.17.0+</span></span><br><span class="line"># /lib/modules/<span class="number">5.17</span><span class="number">.0</span>+ <span class="meta"># cp /hello.ko .</span></span><br><span class="line"># /lib/modules/<span class="number">5.17</span><span class="number">.0</span>+ <span class="meta"># modprobe -r hello</span></span><br><span class="line">[  <span class="number">487.404929</span>] Goodbey, cruel world</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>linux-module</tag>
+        <tag>insmod</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>内存泄露分析</title>
     <url>/archives/7.html</url>
     <content><![CDATA[<h1 id="内存泄露分析"><a href="#内存泄露分析" class="headerlink" title="内存泄露分析"></a>内存泄露分析</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>N项目超级夜景模式泄露内存，且泄露内存较大，大概每次19M</p>
@@ -296,6 +336,142 @@
       </tags>
   </entry>
   <entry>
+    <title>内核补丁提交</title>
+    <url>/archives/8.html</url>
+    <content><![CDATA[<h1 id="内核补丁提交"><a href="#内核补丁提交" class="headerlink" title="内核补丁提交"></a>内核补丁提交</h1><p>本文将总结介绍提交内核补丁前的须知规范</p>
+<p>linux官方文档下有详细的关于此部分的描述<a href="https://www.kernel.org/doc/html/v5.9/translations/zh_CN/process/index.html">与Linux 内核社区一起工作</a></p>
+<a id="more"></a>
+<hr>
+<h2 id="补丁提交须知"><a href="#补丁提交须知" class="headerlink" title="补丁提交须知"></a>补丁提交须知</h2><h3 id="linux分支迭代维护规则"><a href="#linux分支迭代维护规则" class="headerlink" title="linux分支迭代维护规则"></a>linux分支迭代维护规则</h3><p>开发者提交到子系统，然后由linus拉取进入主分支，详见下面两张图</p>
+<p><img src="/images/linux/linux-maintainers.png" alt="linux-maintainers.png"></p>
+<p>来自宋宝华的ppt截图</p>
+<p><img src="/images/linux/developing-model.png" alt="Developing-model.png"></p>
+<p>mainline, stable, longterm 版本和linux-next都在<code>https://www.kernel.org/</code>有明确标注,也可以通过以下网址浏览</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">mainline: http<span class="variable">s:</span>//git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git</span><br><span class="line">stable/longterm: git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</span><br><span class="line">nex<span class="variable">t:</span> http<span class="variable">s:</span>//git.kernel.org/pub/scm/linux/kernel/git/<span class="keyword">next</span>/linux-<span class="keyword">next</span>.git</span><br><span class="line"></span><br><span class="line">单拉仓也是通过git.kernel.org，比如linux-meida</span><br><span class="line">gi<span class="variable">t:</span>//git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-media.git, 见http<span class="variable">s:</span>//git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-media.git/</span><br></pre></td></tr></table></figure>
+
+<h3 id="linux官网"><a href="#linux官网" class="headerlink" title="linux官网"></a>linux官网</h3><p><a href="https://www.kernel.org/">linux官网</a></p>
+<p>有对其他相关网址的补充,之后会进行比较详细的描述</p>
+<p><img src="/images/linux/linux-other-resource.png" alt="linux-other-resource.png"></p>
+<h3 id="LXR"><a href="#LXR" class="headerlink" title="LXR"></a>LXR</h3><p>我们可以查看从v2.6.12到最新版本的全部代码</p>
+<p><a href="http://lxr.linux.no/linux">linux-lxr</a></p>
+<h3 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h3><p>如果需要提交我们的补丁到内核，我们需要明确我们更改子系统的维护者。</p>
+<p><a href="http://vger.kernel.org/vger-lists.html/">子系统邮件服务器</a></p>
+<p>假如当我们需要给V4L打补丁前，我们可以订阅该子系统邮件，点击subscribe，会通过<a href="mailto:&#x4d;&#x61;&#106;&#111;&#x72;&#100;&#x6f;&#x6d;&#x6f;&#64;&#118;&#103;&#x65;&#114;&#46;&#107;&#x65;&#114;&#110;&#101;&#x6c;&#46;&#111;&#x72;&#x67;">&#x4d;&#x61;&#106;&#111;&#x72;&#100;&#x6f;&#x6d;&#x6f;&#64;&#118;&#103;&#x65;&#114;&#46;&#107;&#x65;&#114;&#110;&#101;&#x6c;&#46;&#111;&#x72;&#x67;</a>进行邮件订阅, 之后提交补丁以后可以通过邮件看到</p>
+<p>而邮件也是我们提交代码和代码review的方式</p>
+<p>建议使用如下规则回复进行订阅，否则可能会出现订阅失败</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">auth authid subscribe linux-subsys \</span><br><span class="line">        your-email</span><br></pre></td></tr></table></figure>
+
+<p>订阅成功会受到如下</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">Welcome <span class="keyword">to</span> <span class="keyword">the</span> linux-media mailing <span class="built_in">list</span>!</span><br></pre></td></tr></table></figure>
+
+<p>也可以通过linux/MAINTAINERS来查找，比如V4L框架</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">MEDIA INPUT INFRASTRUCTURE (V4L/DVB)      </span><br><span class="line">M:  Mauro Carvalho Chehab &lt;mchehab@kernel.org&gt;      </span><br><span class="line">L:  linux-media@vger.kernel.org      </span><br><span class="line">S:  Maintained      </span><br><span class="line">W:  http<span class="variable">s:</span>//linuxtv.org      </span><br><span class="line">Q:  http://patchwork.kernel.org/project/linux-media/<span class="keyword">list</span>/      </span><br><span class="line">T:  git gi<span class="variable">t:</span>//linuxtv.org/media_tree.git      </span><br><span class="line">F:  Documentation/admin-guide/media/  </span><br></pre></td></tr></table></figure>
+
+<p>高通camera子系统camss架构，主要是csid-csiphy-ispif部分</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">QUALCOMM CAMERA SUBSYSTEM DRIVER      </span><br><span class="line">M:  Robert Foss &lt;robert.foss@linaro.org&gt;      </span><br><span class="line">M:  Todor Tomov &lt;todor.too@gmail.<span class="keyword">com</span>&gt;      </span><br><span class="line">L:  linux-media@vger.kernel.org                                                                                                                                                                                     </span><br><span class="line">S:  Maintained      </span><br><span class="line">F:  Documentation/admin-guide/media/qcom_camss.rst      </span><br><span class="line">F:  Documentation/devicetree/bindings/media/*camss*      </span><br><span class="line">F:  drivers/media/platform/qcom/camss/ </span><br></pre></td></tr></table></figure>
+
+<h3 id="patchwork"><a href="#patchwork" class="headerlink" title="patchwork"></a>patchwork</h3><p><a href="https://patchwork.kernel.org/">linux-patchwork</a></p>
+<p>可以在patchwork中查看各子系统的通过mailing抓取的patch</p>
+<h3 id="bugzilla"><a href="#bugzilla" class="headerlink" title="bugzilla"></a>bugzilla</h3><p><a href="https://bugzilla.kernel.org/">linux-bugzilla</a></p>
+<p>在这里我们可以查看最近提交的bug.</p>
+<p><img src="/images/linux/linux-bugzilla.png" alt="linux-bugzilla.png"></p>
+<h3 id="wiki"><a href="#wiki" class="headerlink" title="wiki"></a>wiki</h3><p><a href="https://www.wiki.kernel.org/">wiki-linux</a></p>
+<h3 id="IRC"><a href="#IRC" class="headerlink" title="IRC"></a>IRC</h3><p>新建一个IRC网络，输入服务器地址irc.oftc.net和用户名，密码，通过以下进行register</p>
+<figure class="highlight delphi"><table><tr><td class="code"><pre><span class="line"><span class="keyword">REGISTER</span> password e-mail</span><br></pre></td></tr></table></figure>
+
+<p>注册成功，提示</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">Successfully <span class="keyword">set</span> +R <span class="keyword">on</span> your nick.</span><br></pre></td></tr></table></figure>
+
+<p>如何加入一个子系统的irc聊天室，见<a href="https://kernelnewbies.org/IRC">linux-IRC</a></p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">Start your favorite IRC client</span><br><span class="line"><span class="built_in">/server </span>irc.oftc.net</span><br><span class="line">/join #kernelnewbies</span><br></pre></td></tr></table></figure>
+
+<p>确定子系统聊天室，比如linux-media</p>
+<p><img src="/images/linux/irc-linux-media.png" alt="irc-linux-media.png"></p>
+<h2 id="代码质量"><a href="#代码质量" class="headerlink" title="代码质量"></a>代码质量</h2><h3 id="代码编写规范"><a href="#代码编写规范" class="headerlink" title="代码编写规范"></a>代码编写规范</h3><p>编码规范见<code>Documentation/process/coding-style.rst</code></p>
+<p>中文翻译：<code>Documentation/output/translations/zh_CN/process/coding-style.html</code></p>
+<p>如果通过<font color=#2196F3 >make htmldocs</font>生成过html文档，见<code>Documentation/output/process/coding-style.html</code></p>
+<h3 id="代码提交清单"><a href="#代码提交清单" class="headerlink" title="代码提交清单"></a>代码提交清单</h3><p>提交清单见<code>Documentation/process/submit-checklist.rst </code></p>
+<p>中文翻译：<code>Documentation/output/translations/zh_CN/process/submit-checklist.html</code></p>
+<p>html文档见<code>Documentation/output/process/submit-checklist.html</code></p>
+<h3 id="代码测试"><a href="#代码测试" class="headerlink" title="代码测试"></a>代码测试</h3><h4 id="Sparse"><a href="#Sparse" class="headerlink" title="Sparse"></a>Sparse</h4><p>Sparse是linus自己开发的内核静态分析工具.</p>
+<p>对于sparse，可以警告程序员 用户空间和内核空间地址之间的混淆、big endian和small endian数量的混合、在需 要一组位标志的地方传递整数值等等</p>
+<p>sparse说明见<code>Documentation/dev-tools/sparse.rst</code></p>
+<p>html文档见<code>Documentation/output/dev-tools/sparse.html</code></p>
+<p>本地安装sparse</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">sudo apt-<span class="built_in">get</span> install sparse </span><br></pre></td></tr></table></figure>
+
+<p>或者编译源码（推荐）</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">git clone gi<span class="variable">t:</span>//git.kernel.org/pub/scm/devel/sparse/sparse.git</span><br><span class="line"><span class="keyword">make</span></span><br><span class="line"><span class="keyword">make</span> install</span><br><span class="line"></span><br><span class="line">//如果缺少依赖包，根据Makefile编写code安装相关</span><br><span class="line">apt-<span class="built_in">get</span> install libxml2</span><br><span class="line">apt-<span class="built_in">get</span> install libxml2-dev</span><br><span class="line"></span><br><span class="line">sudo apt-<span class="built_in">get</span> install sqlite3</span><br><span class="line">sudo apt-<span class="built_in">get</span> install libsqlite3-dev</span><br><span class="line">//如果版本太老，需要从http<span class="variable">s:</span>//www.sqlite.org/download.html下载手动安装</span><br><span class="line">wget http<span class="variable">s:</span>//www.sqlite.org/snapshot/sqlite-snapshot-<span class="number">202110132029</span>.tar.gz --<span class="keyword">no</span>-check-certificate</span><br><span class="line">./configure </span><br><span class="line"><span class="keyword">make</span></span><br><span class="line"><span class="keyword">make</span> install</span><br><span class="line"><span class="keyword">cp</span> sparse /bin/.</span><br><span class="line"><span class="keyword">cp</span> sparse /usr/bin/.</span><br><span class="line"></span><br><span class="line">sudo apt-<span class="built_in">get</span> install libgtk-<span class="number">3</span>-dev</span><br><span class="line">sudo apt-<span class="built_in">get</span> install llvm</span><br></pre></td></tr></table></figure>
+
+<p>即使是本地编译的sparse，依旧会出现以下错误</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  v4l2-core gi<span class="variable">t:</span>(master) sparse -<span class="keyword">a</span> tuner-core.<span class="keyword">c</span></span><br><span class="line">tuner-core.<span class="keyword">c</span>:<span class="number">18</span>:<span class="number">11</span>: error: unable <span class="keyword">to</span> <span class="keyword">open</span> <span class="string">&#x27;linux/module.h&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Coccinelle"><a href="#Coccinelle" class="headerlink" title="Coccinelle"></a>Coccinelle</h4><p>Coccinelle能够发现各种潜在的编码问题；它还可以为这些问题提出修复方案.</p>
+<p>sparse说明见<code>Documentation/dev-tools/coccinelle.rst</code></p>
+<p>内核语义补丁见<code>scripts/coccinelle</code></p>
+<p>html文档见<code>Documentation/output/dev-tools/coccinelle.html</code></p>
+<p>本地安装</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">sudo apt-<span class="built_in">get</span> install coccinelle</span><br></pre></td></tr></table></figure>
+
+<p>源码编译安装Coccinelle</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">git clone git@github.<span class="keyword">com</span>:coccinelle/coccinelle.git</span><br><span class="line">sudo apt-<span class="built_in">get</span> install autoconf</span><br><span class="line"></span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml</span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml-interp</span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml-native-compilers</span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml-nox</span><br><span class="line"></span><br><span class="line"><span class="keyword">cp</span> spatch.<span class="keyword">opt</span> /usr/bin/.</span><br><span class="line"></span><br><span class="line">tes<span class="variable">t:</span></span><br><span class="line"> spatch -sp_file demos/simple.cocci demos/simple.<span class="keyword">c</span> -<span class="keyword">o</span> /tmp/new_simple.<span class="keyword">c</span></span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ spatch -sp_file demos/simple.cocci demos/simple.<span class="keyword">c</span> -<span class="keyword">o</span> /tmp/new_simple.<span class="keyword">c</span></span><br><span class="line">init_defs_builtin<span class="variable">s:</span> /usr/lib/coccinelle/standard.h</span><br><span class="line">HANDLING: demos/simple.<span class="keyword">c</span></span><br><span class="line">diff = </span><br><span class="line">--- demos/simple.<span class="keyword">c</span></span><br><span class="line">+++ /tmp/cocci-output-<span class="number">859</span>-aeb2ab-simple.<span class="keyword">c</span></span><br><span class="line">@@ -<span class="number">1</span>,<span class="number">4</span> +<span class="number">1</span>,<span class="number">4</span> @@</span><br><span class="line"> <span class="keyword">int</span> main(<span class="keyword">int</span> i) &#123;</span><br><span class="line">-  f(&quot;ca va&quot;);</span><br><span class="line">-  f(g(&quot;ca va pas&quot;));</span><br><span class="line">+  f(&quot;ca va&quot;, 3);</span><br><span class="line">+  f(g(&quot;ca va pas&quot;), 3);</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line">//测试ocamlrun报错</span><br><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ ocamlrun spatch -sp_file demos/simple.cocci demos/simple.<span class="keyword">c</span> -<span class="keyword">o</span> /tmp/new_simple.<span class="keyword">c</span></span><br><span class="line">Fatal error: the <span class="keyword">file</span> <span class="string">&#x27;/usr/bin/spatch&#x27;</span> <span class="keyword">is</span> not <span class="keyword">a</span> bytecode <span class="built_in">executable</span> <span class="keyword">file</span></span><br><span class="line"></span><br><span class="line">版面check</span><br><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ ocaml -<span class="keyword">version</span>                                                                 </span><br><span class="line">The OCaml toplevel, <span class="keyword">version</span> <span class="number">4.02</span>.<span class="number">3</span></span><br><span class="line"></span><br><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ camlp4 -<span class="keyword">version</span></span><br><span class="line"><span class="number">4.02</span>.<span class="number">3</span></span><br><span class="line"></span><br><span class="line">貌似从ocaml <span class="number">4.0</span>.<span class="number">2</span>开始，camlp4已经被遗弃使用</span><br></pre></td></tr></table></figure>
+
+<h2 id="提交补丁"><a href="#提交补丁" class="headerlink" title="提交补丁"></a>提交补丁</h2><h3 id="配置git"><a href="#配置git" class="headerlink" title="配置git"></a>配置git</h3><p>在.git/config中增加以下部分</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">[user]    </span><br><span class="line">    email = xiaer1921@gmail.<span class="keyword">com</span>   </span><br><span class="line">    name = xiaer1921    </span><br><span class="line">[core]    </span><br><span class="line">    editor = <span class="keyword">vim</span>    </span><br><span class="line">[color]    </span><br><span class="line">    ui = auto    </span><br><span class="line">[sendemail]    </span><br><span class="line">    smtpserver = smtp.gmail.<span class="keyword">com</span>    </span><br><span class="line">    smtpserverport = <span class="number">587</span>                                                                              </span><br><span class="line">    smtpencryption = tls    </span><br><span class="line">    smtpuser = xiaer1921@gmail.<span class="keyword">com</span> </span><br></pre></td></tr></table></figure>
+
+<h3 id="制作补丁"><a href="#制作补丁" class="headerlink" title="制作补丁"></a>制作补丁</h3><p>举例：scripts/gdb/linux/tasks.py 没有增加SPDX许可，增加许可</p>
+<p>文件规范检查</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">./scripts/checkpatch.pl --<span class="keyword">file</span> scripts/gdb/linux/tasks.<span class="keyword">py</span></span><br></pre></td></tr></table></figure>
+
+<p>常见的错误如下</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">//第一行没有增加SPDX许可，警告如下</span><br><span class="line">WARNING: Missing <span class="built_in">or</span> malformed SPDX-License-Identifier <span class="keyword">tag</span> in <span class="built_in">line</span> <span class="number">1</span></span><br><span class="line">//第一行正确格式</span><br><span class="line"># SPDX-License-Identifier: GPL-<span class="number">2.0</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="提交commit"><a href="#提交commit" class="headerlink" title="提交commit"></a>提交commit</h4><figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">git add scripts<span class="regexp">/gdb/</span>linux/tasks.py</span><br><span class="line">git commit -s <span class="regexp">//</span>进行签名</span><br></pre></td></tr></table></figure>
+
+<p>提交描述中规范如下：</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">//第一行对修改的简短描述，将成为邮件的标题</span><br><span class="line">//第二行空行</span><br><span class="line">//第三行，对修改的详细描述，将成为邮件内容</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h4 id="生成patch"><a href="#生成patch" class="headerlink" title="生成patch"></a>生成patch</h4><p>针对最近的commit生成patch <code>git format-patch -1 -o .</code> -1为最近的commit</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  linux gi<span class="variable">t:</span>(master) git format-patch HEAD~</span><br><span class="line"><span class="number">0001</span>-scripts-gdb-<span class="built_in">add</span>-SPDX-license-<span class="keyword">for</span>-scripts-gdb-linux-t.patch</span><br></pre></td></tr></table></figure>
+
+<p><font color=#2196F3 >patch规范检查</font> </p>
+<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line">./scripts/checkpatch.pl --file 0001-scripts-gdb-add-SPDX-license-for-scripts-gdb-linux-t.patch</span><br><span class="line"><span class="comment">//如果没有增加第三行详细描述部分，会进行警告</span></span><br><span class="line"><span class="symbol">WARNING: </span>Missing commit description - Add an appropriate one</span><br><span class="line"><span class="comment">//规范检查正确</span></span><br><span class="line">0001-scripts-gdb-add-SPDX-license-for-scripts-gdb-linux-t.patch has no obvious style problems and is ready for submission.</span><br></pre></td></tr></table></figure>
+
+<p>获取patch的维护人员</p>
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  linux git:(master) ./scripts/get_maintainer.pl <span class="number">0001</span>-scripts-gdb-add-SPDX-license-<span class="keyword">for</span>-scripts-gdb-linux-t.patch </span><br><span class="line">Jan Kiszka &lt;jan.<span class="symbol">kiszka@</span>siemens.com&gt; (supporter:GDB KERNEL DEBUGGING HELPER SCRIPTS,commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%)</span><br><span class="line">Kieran Bingham &lt;<span class="symbol">kbingham@</span>kernel.org&gt; (supporter:GDB KERNEL DEBUGGING HELPER SCRIPTS)</span><br><span class="line">Andrew Morton &lt;<span class="symbol">akpm@</span>linux-foundation.org&gt; (commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%)</span><br><span class="line">Ritesh Harjani &lt;<span class="symbol">riteshh@</span>linux.ibm.com&gt; (commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,authored:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,added_lines:<span class="number">5</span>/<span class="number">6</span>=<span class="number">83</span>%,removed_lines:<span class="number">4</span>/<span class="number">5</span>=<span class="number">80</span>%)</span><br><span class="line">xiaer1921 &lt;<span class="symbol">xiaer1921@</span>aliyun.com&gt; (commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,authored:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,added_lines:<span class="number">1</span>/<span class="number">6</span>=<span class="number">17</span>%,removed_lines:<span class="number">1</span>/<span class="number">5</span>=<span class="number">20</span>%)</span><br><span class="line">linux-<span class="symbol">kernel@</span>vger.kernel.org (open list)</span><br></pre></td></tr></table></figure>
+
+<p>发送patch</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">git send-email --<span class="keyword">to</span> jan.kiszka@siemens.<span class="keyword">com</span> --<span class="keyword">to</span> kbingham@kernel.org --<span class="keyword">cc</span> linux-kernel@vger.kernel.org <span class="number">0001</span>-scripts-gdb-<span class="built_in">add</span>-SPDX-license-<span class="keyword">for</span>-scripts-gdb-linux-t.patch</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="http://tinylab.org/upstream-patches-to-linux-mainline/">泰晓科技-Linux upstream: 给 Linus 发个 patch 吧</a></li>
+<li><a href="http://tinylab.org/wp-content/uploads/2016/01/linux-community-and-upstream-linux-codes.pdf">宋宝华-Linux community and Upstream Linux Codes</a></li>
+<li><a href="http://tinylab.org/wp-content/uploads/2013/06/how-to-contribute-to-linux-mainline.pdf">泰晓科技-how-to-contribute-to-linux-mainline</a></li>
+<li><a href="http://tinylab.org/embedded-linux-kernel-mailining/">泰晓科技-如何贡献内核补丁</a></li>
+<li><a href="http://tinylab.org/latest-linux-code/">泰晓科技-如何获取某个 Linux 子系统上游的最新代码</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/75366661">hello小崔的linux</a></li>
+<li><a href="https://blog.csdn.net/cui841923894/article/details/81545627">hello小崔-LTP提交补丁</a></li>
+<li><a href="https://www.cnblogs.com/wang_yb/p/3575039.html">内核工具 – Sparse 简介</a></li>
+<li><a href="https://www.cnblogs.com/bhlsheji/p/5386611.html">请善用工具审核您的内核代码</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>mailing list</tag>
+        <tag>IRC</tag>
+        <tag>patchwork</tag>
+        <tag>bugzilla</tag>
+        <tag>sparse</tag>
+        <tag>coccinelle</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>程序分析利器gdb</title>
     <url>/archives/3.html</url>
     <content><![CDATA[<h1 id="程序分析利器gdb"><a href="#程序分析利器gdb" class="headerlink" title="程序分析利器gdb"></a>程序分析利器gdb</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>通过gdb可以分析进程在运行和crash的内部状态，根据man手册描述有以下作用</p>
@@ -414,122 +590,6 @@
         <tag>gdb</tag>
         <tag>kernel-tool</tag>
         <tag>程序调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>sysdump学习</title>
-    <url>/archives/4.html</url>
-    <content><![CDATA[<h1 id="sysdump学习"><a href="#sysdump学习" class="headerlink" title="sysdump学习"></a>sysdump学习</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>sysdump为dump system memory，也称内核转储。在内核发生异常时，通过kexec和kdump，将内存和寄存器信息保存，在重启以后的uboot阶段将信息转储到文件中。我们能够通过转储文件发现异常发生的根本原因。</p>
-<a id="more"></a>
-<hr>
-<h2 id="内核异常发生情况"><a href="#内核异常发生情况" class="headerlink" title="内核异常发生情况"></a>内核异常发生情况</h2><p>内核调用panic来进行内核转储，大部分情况分为以下几种：</p>
-<ol>
-<li>代码简单逻辑异常直接或节间造成的panic调用， 比如空指针</li>
-<li>代码逻辑异常造成的任务调度异常，其他任务无法抢占CPU</li>
-<li>代码逻辑异常造成的中断关闭，比如中断处理中死锁</li>
-<li>中断频率远超时钟中断</li>
-<li>内存踩踏导致的非法地址访问</li>
-<li>…</li>
-</ol>
-<p>下面是一些常见的触发场景：</p>
-<h3 id="驱动调用"><a href="#驱动调用" class="headerlink" title="驱动调用"></a>驱动调用</h3><p>驱动调用panic，比如sysrq触发</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo 1 &gt;/proc/sys/kernel/sysrq</span><br><span class="line">echo c &gt; /proc/sysrq-trigger</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="die函数"><a href="#die函数" class="headerlink" title="die函数"></a>die函数</h3><h3 id="BUG-BUG-ON"><a href="#BUG-BUG-ON" class="headerlink" title="BUG/BUG_ON"></a>BUG/BUG_ON</h3><p>通过调用非法指令（未定义指令），空指针等进入die调用，或者直接调用panic</p>
-<h3 id="page-fault"><a href="#page-fault" class="headerlink" title="page_fault"></a>page_fault</h3><p>访问非法地址，可能发生内存踩踏，通过RIP异常抛出入手分析</p>
-<h3 id="soft-lockup"><a href="#soft-lockup" class="headerlink" title="soft lockup"></a>soft lockup</h3><p>每一个cpu上都有一个hrtime中断监控的watchdog线程，即hrimte触发的中断上下文会去检测watchdog线程，如果检测到该线程在设定时间内没有调度过，说明该cpu被长时间被占用，调度已经发生异常。原因：==进程上下文关闭抢占==。依赖中断，==如果中断被关闭，则此功能无法正常工作==</p>
-<h3 id="hard-lockup"><a href="#hard-lockup" class="headerlink" title="hard lockup"></a>hard lockup</h3><p>一个cpu如果检测相邻的==cpu中断被关闭==就主动panic，见function watchdog_check_hardlockup_other_cpu，因此在panic中异常中断关闭的cpu也无法处理处理器中断，因此无法刷新缓冲，==sysdump信息因此不可靠==</p>
-<h3 id="硬件喂狗"><a href="#硬件喂狗" class="headerlink" title="硬件喂狗"></a>硬件喂狗</h3><h4 id="单线程喂狗"><a href="#单线程喂狗" class="headerlink" title="单线程喂狗"></a>单线程喂狗</h4><p>需要一个喂狗线程定期对硬件狗操作，如果对硬件狗的操作延误，会导致触发硬狗中断，cpu收到中断在中断上下文进行panic调用</p>
-<ol>
-<li><p>如果硬狗中断被关闭，则功能失效。（==因此硬狗中断需要为不可屏蔽中断==）</p>
-</li>
-<li><p>如果硬狗中断被CPU响应，但是由于异常的cpu中断被关闭，因为异常的cpu缓存无法刷新，sysdump信息因此也不可靠</p>
-</li>
-<li><p>如果一个cpu异常，其他cpu依旧正常喂狗，则监测功能失效</p>
-</li>
-</ol>
-<p>这种设计存在以下缺陷：</p>
-<ol>
-<li>假设CPU0异常，但是其他cpu一直在喂狗，因此无法监控到全部的cpu</li>
-<li>异常cpu因为关闭中断导致无法处理panic发出的处理器中断，因此导致cpu缓存无法刷新</li>
-</ol>
-<h4 id="多线程绑定cpu喂狗"><a href="#多线程绑定cpu喂狗" class="headerlink" title="多线程绑定cpu喂狗"></a>多线程绑定cpu喂狗</h4><p>将cpu和线程绑定，cpu去操作一个全局变量，每一个cpu对应其中的一位，当线程醒来就置1，当全局置1的个数和cpu 正在使用的个数相等时，代表全部cpu都喂狗对应的狗，此时才会去喂硬狗，可以bitmap控制。</p>
-<h2 id="转储内核分析"><a href="#转储内核分析" class="headerlink" title="转储内核分析"></a>转储内核分析</h2><p>在uboot将转储文件导出以后，我们需要通过这些文件配合内核符号映射表vmlinux进行异常现场分析</p>
-<p>需要确定vmlinux和转储文件的kernel版本保持一致，编译环境可能是gcc，也有可能是clang</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> strings vmlinux | grep <span class="string">&quot;Linux version&quot;</span>                </span></span><br><span class="line">Linux version 4.14.199+-ab131  clang version 11.0.1</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> strings sysdump.core | grep <span class="string">&quot;Linux version&quot;</span>    &gt;&gt;sysdump.core为内核转储后合并的文件</span></span><br><span class="line">Linux version 4.14.199+-ab131  clang version 11.0.1</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">或者gcc编译</span><br><span class="line">➜  5.17.0+  strings vmlinux | grep &quot;Linux version&quot;  </span><br><span class="line">Linux version 5.17.0+ (root@sholck) (gcc (Ubuntu 6.5.0-2ubuntu1~16.04) 6.5.0 20181026, GNU ld (GNU Binutils for Ubuntu) 2.26.1) #7 SMP PREEMPT_DYNAMIC Thu Mar 24 14:58:15 CST 2022</span><br><span class="line"></span><br><span class="line">➜  5.17.0+ strings vmcore | grep &quot;Linux version&quot; </span><br><span class="line">Linux version 5.17.0+ (root@sholck) (gcc (Ubuntu 6.5.0-2ubuntu1~16.04) 6.5.0 20181026, GNU ld (GNU Binutils for Ubuntu) 2.26.1) #7 SMP PREEMPT_DYNAMIC Thu Mar 24 14:58:15 CST 2022</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>之后通过crash工具进行现场分析</p>
-<h3 id="crash"><a href="#crash" class="headerlink" title="crash"></a>crash</h3><h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><ol>
-<li><p>官网：<a href="https://crash-utility.github.io/">https://crash-utility.github.io</a></p>
-</li>
-<li><p>android 项目自带，需要在vendor/xxx/tools目录下检查平台基线是否自带</p>
-</li>
-<li><p>ubuntu本地：sudo apt-get install linux-crashdump    (推荐)</p>
-</li>
-</ol>
-<h4 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h4><p>参数需要设置物理内存起始地址，内核符号映射表，转储内核</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> crash_arm64 -m phys_offset=0x80000000 vmlinux sysdump.core --cpus 8</span></span><br><span class="line"></span><br><span class="line">      KERNEL: vmlinux</span><br><span class="line">    DUMPFILE: all</span><br><span class="line">        CPUS: 8 [OFFLINE: 7]</span><br><span class="line">        DATE: Tue Dec 14 05:44:33 2021</span><br><span class="line">      UPTIME: 00:02:41</span><br><span class="line">LOAD AVERAGE: 5.99, 2.96, 1.16</span><br><span class="line">       TASKS: 1930</span><br><span class="line">    NODENAME: localhost</span><br><span class="line">     RELEASE: 4.14.199+-ab131</span><br><span class="line">     VERSION: #1 SMP PREEMPT Tue Dec 14 03:15:03 CST 2021</span><br><span class="line">     MACHINE: aarch64  (unknown Mhz)</span><br><span class="line">      MEMORY: 4 GB</span><br><span class="line">       PANIC: &quot;Kernel panic - not syncing: sysrq triggered crash&quot;  &gt;&gt;sysrq触发</span><br><span class="line">         PID: 7058</span><br><span class="line">     COMMAND: &quot;sh&quot;</span><br><span class="line">        TASK: ffffffc06a47da00  [THREAD_INFO: ffffffc06a47da00]</span><br><span class="line">         CPU: 3</span><br><span class="line">       STATE: TASK_RUNNING (PANIC）</span><br></pre></td></tr></table></figure>
-
-<h4 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h4><p>在启动的TUI窗口中，shell命令是可以执行的</p>
-<h5 id="ps"><a href="#ps" class="headerlink" title="ps"></a>ps</h5><p>打印内核中进程的状态，包括tasklet等</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> ps &gt;ps.txt</span></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> ps | grep -n <span class="string">&quot;ffffffc06a47da00&quot;</span></span></span><br><span class="line">1930:&gt;  7058   6808   3  ffffffc06a47da00  RU   0.0 10771096   2696  sh</span><br></pre></td></tr></table></figure>
-
-<h5 id="bt"><a href="#bt" class="headerlink" title="bt"></a>bt</h5><p>打印堆栈，默认打印crash cpu的堆栈</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> bt</span></span><br><span class="line">PID: 7058   TASK: ffffffc06a47da00  CPU: 3   COMMAND: &quot;sh&quot;</span><br><span class="line"><span class="meta"> #</span><span class="bash">0 [ffffff801582b950] sysdump_panic_event<span class="variable">$8bfd56c0834fe7d208b7e7c52872c4e4</span> at ffffff80087a218c</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">1 [ffffff801582b9b0] <span class="variable">$x</span>.25 at ffffff800826e600</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">2 [ffffff801582bc50] panic at ffffff800823a00c</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">3 [ffffff801582bcb0] sysrq_handle_crash<span class="variable">$330e89e9e6de65c311d08fb99226844d</span> at ffffff80087d3d14</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">4 [ffffff801582bcc0] __handle_sysrq at ffffff80087d3768</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">5 [ffffff801582bd10] <span class="variable">$x</span>.53 at ffffff80087d4dc0</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">6 [ffffff801582bd60] proc_reg_write<span class="variable">$5fc6da0b4e1b06391acfa8bd9d90410e</span> at ffffff80084fa0a4</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">7 [ffffff801582be10] __vfs_write at ffffff8008454d78</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">8 [ffffff801582be40] vfs_write at ffffff80084551b0</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">9 [ffffff801582be90] sys_write at ffffff800845540c</span></span><br><span class="line"><span class="meta">#</span><span class="bash">10 [ffffff801582bff0] el0_svc_naked at ffffff80080844bc</span></span><br><span class="line">     PC: 00000075815348c8   LR: 0000005f4b89b63c   SP: 0000007ff5c9a450</span><br><span class="line">    X29: 0000007ff5c9a4d0  X28: 0000007ff5c9a490  X27: 0000005f4b8c02e8</span><br><span class="line">    X26: 00000075816fe000  X25: 0000000000000063  X24: 0000005f4b89e99c</span><br><span class="line">    X23: 0000005f4b8bf640  X22: 0000007ff5c9a4b0  X21: 0000007ff5c9a4a8</span><br><span class="line">    X20: b4000073f13a5328  X19: 0000000000000002  X18: 0000007581866000</span><br><span class="line">    X17: 00000075815348c0  X16: 0000007581552ef8  X15: 000000000000002f</span><br><span class="line">    X14: 0000000000000072  X13: f790000000012102  X12: 0000000032d3dd57</span><br><span class="line">    X11: 00000000f13a53bc  X10: b4000073f13a53a8   X9: b4000073f13a5328</span><br><span class="line">     X8: 0000000000000040   X7: 0000000000000000   X6: 0000000000000063</span><br><span class="line">     X5: b4000073813a469a   X4: ffffffffffffffff   X3: ffffffffffffffff</span><br><span class="line">     X2: 0000000000000002   X1: b4000073f13a5328   X0: 0000000000000001</span><br><span class="line">    ORIG_X0: 0000000000000001  SYSCALLNO: 40  PSTATE: 00001000</span><br></pre></td></tr></table></figure>
-
-<h5 id="log"><a href="#log" class="headerlink" title="log"></a>log</h5><p>打印kernel最后log buffer保存的信息，一般也会包含堆栈和寄存器信息，分析可以对异常有一个大概的了解</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> <span class="built_in">log</span> &gt;log.txt</span></span><br></pre></td></tr></table></figure>
-
-<h5 id="runq"><a href="#runq" class="headerlink" title="runq"></a>runq</h5><p>查看线程列表</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> runq -c 3  &gt;&gt;指定cpu3</span></span><br><span class="line">CPU 3 RUNQUEUE: ffffffc0ffec6700</span><br><span class="line">  CURRENT: PID: 7058   TASK: ffffffc06a47da00  COMMAND: &quot;sh&quot;</span><br><span class="line">  RT PRIO_ARRAY: ffffffc0ffec6868</span><br><span class="line">     [no tasks queued]</span><br><span class="line">  CFS RB_ROOT: ffffffc0ffec6790</span><br><span class="line">     [no tasks queued]</span><br></pre></td></tr></table></figure>
-
-<h5 id="irq"><a href="#irq" class="headerlink" title="irq"></a>irq</h5><p>查看中断数据</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> irq</span></span><br><span class="line">IRQ   IRQ_DESC/_DATA      IRQACTION      NAME</span><br><span class="line">  0       (unused)          (unused)</span><br><span class="line">  1   ffffffc0fa821600      (unused)</span><br><span class="line">  2   ffffffc0fa821800  ffffffc0faaa3d80  &quot;/soc/aon/timer@64470000&quot;</span><br><span class="line">  3   ffffffc0fa821a00      (unused)</span><br><span class="line">  4   ffffffc0fa821c00  ffffffc0faaa4180  &quot;arch_timer&quot;   &gt;&gt;定时器中断</span><br><span class="line">  </span><br><span class="line"><span class="meta">  crash_arm64&gt;</span><span class="bash"> irq 4</span></span><br><span class="line"> IRQ   IRQ_DESC/_DATA      IRQACTION      NAME</span><br><span class="line">  4   ffffffc0fa821c00  ffffffc0faaa4180  &quot;arch_timer&quot;</span><br><span class="line">  </span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> irqaction ffffffc0faaa4180</span></span><br><span class="line">struct irqaction &#123;</span><br><span class="line">  handler = 0xffffff8008f9a078 &lt;arch_timer_handler_phys$5757c1f5416e78392ea0a8126822dd28.cfi_jt&gt;, &gt;&gt;对应中断模块</span><br><span class="line">  dev_id = 0x0,</span><br><span class="line">  percpu_dev_id = 0xffffff8009761480,</span><br><span class="line">  next = 0x0,</span><br><span class="line">  thread_fn = 0x0,</span><br><span class="line">  thread = 0x0,</span><br><span class="line">  secondary = 0x0,</span><br><span class="line">  irq = 4,</span><br><span class="line">  flags = 17412,</span><br><span class="line">  thread_flags = 0,</span><br><span class="line">  thread_mask = 0,</span><br><span class="line">  name = 0xffffff8009304dca &quot;arch_timer&quot;,</span><br><span class="line">  dir = 0x0</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>查看各中断触发在cpu上触发次数，也可以看出中断控制器驱动版本GICv3</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> irq -s</span></span><br><span class="line">           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7</span><br><span class="line">  2:       5040       2761       2996       2917       4043       4225        999       1438    GICv3 /soc/aon/timer@64470000</span><br><span class="line">  4:      35885      27954      25117      23517      22156      20163      29762      28382    GICv3 arch_timer</span><br></pre></td></tr></table></figure>
-
-<h5 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h5><p>查看数据结构成员，并打印结构体大小，默认下直接输出结构名即可打印</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> thread_struct  &gt;&gt;直接输入结构体即可</span></span><br><span class="line">struct thread_struct &#123;</span><br><span class="line">    struct cpu_context cpu_context;</span><br><span class="line">    unsigned long tp_value;</span><br><span class="line">    unsigned long tp2_value;</span><br><span class="line">    struct fpsimd_state fpsimd_state;</span><br><span class="line">    unsigned long fault_address;</span><br><span class="line">    unsigned long fault_code;</span><br><span class="line">    struct debug_info debug;</span><br><span class="line">&#125;</span><br><span class="line">SIZE: 960</span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> struct thread_struct -o &gt;&gt;可以加选项-o(显示成员偏移)或者-x</span></span><br><span class="line">struct thread_struct &#123;</span><br><span class="line">    [0] struct cpu_context cpu_context;</span><br><span class="line">  [104] unsigned long tp_value;</span><br><span class="line">  [112] unsigned long tp2_value;</span><br><span class="line">  [128] struct fpsimd_state fpsimd_state;</span><br><span class="line">  [672] unsigned long fault_address;</span><br><span class="line">  [680] unsigned long fault_code;</span><br><span class="line">  [688] struct debug_info debug;</span><br><span class="line">&#125;</span><br><span class="line">SIZE: 960</span><br></pre></td></tr></table></figure>
-
-<h5 id="rd"><a href="#rd" class="headerlink" title="rd"></a>rd</h5><p>打印指定内存地址的信息</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> sysrq_crash_op</span></span><br><span class="line">sysrq_crash_op = $23 = &#123;</span><br><span class="line">  handler = 0xffffff8008f9a8fc &lt;sysrq_handle_crash$330e89e9e6de65c311d08fb99226844d.cfi_jt&gt;,</span><br><span class="line">  help_msg = 0xffffff8009364302 &quot;crash(c)&quot;,</span><br><span class="line">  action_msg = 0xffffff800931823a &quot;Trigger a crash&quot;,</span><br><span class="line">  enable_mask = 8</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> sysrq_key_op -o</span></span><br><span class="line">struct sysrq_key_op &#123;</span><br><span class="line">   [0] void (*handler)(int);</span><br><span class="line">   [8] char *help_msg;</span><br><span class="line">  [16] char *action_msg;</span><br><span class="line">  [24] int enable_mask;</span><br><span class="line">&#125;</span><br><span class="line">SIZE: 32</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd 0xffffff8009364302 2</span></span><br><span class="line">ffffff8009364302:  2963286873617263 28746f6f62657200   crash(c).reboot(</span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd 0xffffff800931823a 2</span></span><br><span class="line">ffffff800931823a:  2072656767697254 0068736172632061   Trigger a crash.</span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd sysrq_crash_op 4   </span></span><br><span class="line">ffffff8009bbf798:  ffffff8008f9a8fc ffffff8009364302   .........C6.....</span><br><span class="line">ffffff8009bbf7a8:  ffffff800931823a 0000000000000008   :.1.............</span><br></pre></td></tr></table></figure>
-
-<p>上面正确的解析为 0x63为c  0x72为r,  0x61为a，对应2963286873617263中的后三个字节</p>
-<h5 id="dis"><a href="#dis" class="headerlink" title="dis"></a>dis</h5><p>反编译 </p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> dis msleep -lx</span></span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1919</span><br><span class="line">0xffffff80082e8bdc &lt;$x.165&gt;:    stp     x29, x30, [sp,#-32]!</span><br><span class="line">0xffffff80082e8be0 &lt;msleep+0x4&gt;:        stp     x20, x19, [sp,#16]</span><br><span class="line">0xffffff80082e8be4 &lt;msleep+0x8&gt;:        mov     x29, sp</span><br><span class="line">0xffffff80082e8be8 &lt;msleep+0xc&gt;:        mov     w19, w0</span><br><span class="line">0xffffff80082e8bec &lt;msleep+0x10&gt;:       nop</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/time.c: 616</span><br><span class="line">0xffffff80082e8bf0 &lt;msleep+0x14&gt;:       mov     w8, w19</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1920</span><br><span class="line">0xffffff80082e8bf4 &lt;msleep+0x18&gt;:       cmp     w19, #0x0</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/time.c: 616</span><br><span class="line">0xffffff80082e8bf8 &lt;msleep+0x1c&gt;:       add     x8, x8, #0x3</span><br><span class="line">0xffffff80082e8bfc &lt;msleep+0x20&gt;:       mov     x9, #0x3fffffffffffffff         // #4611686018427387903</span><br><span class="line">0xffffff80082e8c00 &lt;msleep+0x24&gt;:       lsr     x8, x8, #2</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1920</span><br><span class="line">0xffffff80082e8c04 &lt;msleep+0x28&gt;:       csinc   x0, x9, x8, lt</span><br><span class="line">0xffffff80082e8c08 &lt;msleep+0x2c&gt;:       mov     w19, #0x2                       // #2</span><br><span class="line">0xffffff80082e8c0c &lt;msleep+0x30&gt;:       mrs     x20, sp_el0</span><br><span class="line">g/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1793</span><br><span class="line">0xffffff80082e8c10 &lt;msleep+0x34&gt;:       str     x19, [x20,#32]</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1794</span><br><span class="line">0xffffff80082e8c14 &lt;msleep+0x38&gt;:       bl      0xffffff8008f7a4d4 &lt;$x.136&gt;</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1922</span><br><span class="line">0xffffff80082e8c18 &lt;msleep+0x3c&gt;:       cbnz    x0, 0xffffff80082e8c10 &lt;msleep+0x34&gt;</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1924</span><br><span class="line">0xffffff80082e8c1c &lt;msleep+0x40&gt;:       ldp     x20, x19, [sp,#16]</span><br><span class="line">0xffffff80082e8c20 &lt;msleep+0x44&gt;:       ldp     x29, x30, [sp],#32</span><br><span class="line">0xffffff80082e8c24 &lt;msleep+0x48&gt;:       ret</span><br></pre></td></tr></table></figure>
-
-<h5 id="vtop"><a href="#vtop" class="headerlink" title="vtop"></a>vtop</h5><p>虚拟地址到物理地址的映射</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> vtop 0xffffff8009364302</span></span><br><span class="line">VIRTUAL           PHYSICAL</span><br><span class="line">ffffff8009364302  81364302</span><br><span class="line"></span><br><span class="line">PAGE DIRECTORY: ffffff800a063000</span><br><span class="line">   PGD: ffffff800a063000 =&gt; 17fffd003</span><br><span class="line">   PMD: ffffffc0ffffd248 =&gt; 81200791   页中间目录，二级页表索引中可以称为页表，存放PTE页表项</span><br><span class="line">  PAGE: 81200000  (2MB)    页表项+偏移</span><br><span class="line"></span><br><span class="line">  PTE     PHYSICAL  FLAGS</span><br><span class="line">81200791  81200000  (VALID|RDONLY|SHARED|AF)    </span><br><span class="line"></span><br><span class="line">      PAGE               PHYSICAL      MAPPING       INDEX CNT FLAGS</span><br><span class="line">ffffffbf0004d900         81364000                0        0  1 1000 reserved</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd -p 81364302  打印物理地址内的内存信息</span></span><br><span class="line">        81364302:  2963286873617263                    crash(c)</span><br></pre></td></tr></table></figure>
-
-<h5 id="sym"><a href="#sym" class="headerlink" title="sym"></a>sym</h5><p>功能：映射转化</p>
-<p>打印全部的符号表：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> sym -l | grep -n <span class="string">&quot;sysrq_crash_op&quot;</span></span></span><br><span class="line">265279:ffffff8009bbf798 (d) sysrq_crash_op</span><br></pre></td></tr></table></figure>
-
-<p>符号转化为虚拟地址</p>
-<h2 id="缩略语"><a href="#缩略语" class="headerlink" title="缩略语"></a>缩略语</h2><ol>
-<li>FIQ Fast Interrupt Request 快速中断模式</li>
-<li>NMI No-Maskable Interrupt 不可屏蔽中断</li>
-<li>IPI Inter-Process Interrupt  处理器中断</li>
-<li>GIC Generic Interrupt Controller 中断控制器</li>
-<li>SGI Software Generated Interrupt 软件触发中断，也称为IPI中断</li>
-<li>ISR interrupt service routine 中断服务程序</li>
-<li>FIQ 快速中断 </li>
-</ol>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-      <tags>
-        <tag>稳定性</tag>
-        <tag>linux</tag>
-        <tag>kernel-tool</tag>
-        <tag>程序调试</tag>
-        <tag>sysdump</tag>
-        <tag>crash</tag>
-        <tag>kdump</tag>
       </tags>
   </entry>
   <entry>
@@ -896,139 +956,119 @@
       </tags>
   </entry>
   <entry>
-    <title>内核补丁提交</title>
-    <url>/archives/8.html</url>
-    <content><![CDATA[<h1 id="内核补丁提交"><a href="#内核补丁提交" class="headerlink" title="内核补丁提交"></a>内核补丁提交</h1><p>本文将总结介绍提交内核补丁前的须知规范</p>
-<p>linux官方文档下有详细的关于此部分的描述<a href="https://www.kernel.org/doc/html/v5.9/translations/zh_CN/process/index.html">与Linux 内核社区一起工作</a></p>
+    <title>sysdump学习</title>
+    <url>/archives/4.html</url>
+    <content><![CDATA[<h1 id="sysdump学习"><a href="#sysdump学习" class="headerlink" title="sysdump学习"></a>sysdump学习</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>sysdump为dump system memory，也称内核转储。在内核发生异常时，通过kexec和kdump，将内存和寄存器信息保存，在重启以后的uboot阶段将信息转储到文件中。我们能够通过转储文件发现异常发生的根本原因。</p>
 <a id="more"></a>
 <hr>
-<h2 id="补丁提交须知"><a href="#补丁提交须知" class="headerlink" title="补丁提交须知"></a>补丁提交须知</h2><h3 id="linux分支迭代维护规则"><a href="#linux分支迭代维护规则" class="headerlink" title="linux分支迭代维护规则"></a>linux分支迭代维护规则</h3><p>开发者提交到子系统，然后由linus拉取进入主分支，详见下面两张图</p>
-<p><img src="/images/linux/linux-maintainers.png" alt="linux-maintainers.png"></p>
-<p>来自宋宝华的ppt截图</p>
-<p><img src="/images/linux/developing-model.png" alt="Developing-model.png"></p>
-<p>mainline, stable, longterm 版本和linux-next都在<code>https://www.kernel.org/</code>有明确标注,也可以通过以下网址浏览</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">mainline: http<span class="variable">s:</span>//git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git</span><br><span class="line">stable/longterm: git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</span><br><span class="line">nex<span class="variable">t:</span> http<span class="variable">s:</span>//git.kernel.org/pub/scm/linux/kernel/git/<span class="keyword">next</span>/linux-<span class="keyword">next</span>.git</span><br><span class="line"></span><br><span class="line">单拉仓也是通过git.kernel.org，比如linux-meida</span><br><span class="line">gi<span class="variable">t:</span>//git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-media.git, 见http<span class="variable">s:</span>//git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-media.git/</span><br></pre></td></tr></table></figure>
+<h2 id="内核异常发生情况"><a href="#内核异常发生情况" class="headerlink" title="内核异常发生情况"></a>内核异常发生情况</h2><p>内核调用panic来进行内核转储，大部分情况分为以下几种：</p>
+<ol>
+<li>代码简单逻辑异常直接或节间造成的panic调用， 比如空指针</li>
+<li>代码逻辑异常造成的任务调度异常，其他任务无法抢占CPU</li>
+<li>代码逻辑异常造成的中断关闭，比如中断处理中死锁</li>
+<li>中断频率远超时钟中断</li>
+<li>内存踩踏导致的非法地址访问</li>
+<li>…</li>
+</ol>
+<p>下面是一些常见的触发场景：</p>
+<h3 id="驱动调用"><a href="#驱动调用" class="headerlink" title="驱动调用"></a>驱动调用</h3><p>驱动调用panic，比如sysrq触发</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo 1 &gt;/proc/sys/kernel/sysrq</span><br><span class="line">echo c &gt; /proc/sysrq-trigger</span><br></pre></td></tr></table></figure>
 
-<h3 id="linux官网"><a href="#linux官网" class="headerlink" title="linux官网"></a>linux官网</h3><p><a href="https://www.kernel.org/">linux官网</a></p>
-<p>有对其他相关网址的补充,之后会进行比较详细的描述</p>
-<p><img src="/images/linux/linux-other-resource.png" alt="linux-other-resource.png"></p>
-<h3 id="LXR"><a href="#LXR" class="headerlink" title="LXR"></a>LXR</h3><p>我们可以查看从v2.6.12到最新版本的全部代码</p>
-<p><a href="http://lxr.linux.no/linux">linux-lxr</a></p>
-<h3 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h3><p>如果需要提交我们的补丁到内核，我们需要明确我们更改子系统的维护者。</p>
-<p><a href="http://vger.kernel.org/vger-lists.html/">子系统邮件服务器</a></p>
-<p>假如当我们需要给V4L打补丁前，我们可以订阅该子系统邮件，点击subscribe，会通过<a href="mailto:&#77;&#x61;&#x6a;&#x6f;&#114;&#100;&#x6f;&#109;&#x6f;&#x40;&#x76;&#x67;&#101;&#114;&#x2e;&#x6b;&#101;&#114;&#x6e;&#x65;&#108;&#46;&#111;&#x72;&#103;">&#77;&#x61;&#x6a;&#x6f;&#114;&#100;&#x6f;&#109;&#x6f;&#x40;&#x76;&#x67;&#101;&#114;&#x2e;&#x6b;&#101;&#114;&#x6e;&#x65;&#108;&#46;&#111;&#x72;&#103;</a>进行邮件订阅, 之后提交补丁以后可以通过邮件看到</p>
-<p>而邮件也是我们提交代码和代码review的方式</p>
-<p>建议使用如下规则回复进行订阅，否则可能会出现订阅失败</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">auth authid subscribe linux-subsys \</span><br><span class="line">        your-email</span><br></pre></td></tr></table></figure>
 
-<p>订阅成功会受到如下</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">Welcome <span class="keyword">to</span> <span class="keyword">the</span> linux-media mailing <span class="built_in">list</span>!</span><br></pre></td></tr></table></figure>
 
-<p>也可以通过linux/MAINTAINERS来查找，比如V4L框架</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">MEDIA INPUT INFRASTRUCTURE (V4L/DVB)      </span><br><span class="line">M:  Mauro Carvalho Chehab &lt;mchehab@kernel.org&gt;      </span><br><span class="line">L:  linux-media@vger.kernel.org      </span><br><span class="line">S:  Maintained      </span><br><span class="line">W:  http<span class="variable">s:</span>//linuxtv.org      </span><br><span class="line">Q:  http://patchwork.kernel.org/project/linux-media/<span class="keyword">list</span>/      </span><br><span class="line">T:  git gi<span class="variable">t:</span>//linuxtv.org/media_tree.git      </span><br><span class="line">F:  Documentation/admin-guide/media/  </span><br></pre></td></tr></table></figure>
+<h3 id="die函数"><a href="#die函数" class="headerlink" title="die函数"></a>die函数</h3><h3 id="BUG-BUG-ON"><a href="#BUG-BUG-ON" class="headerlink" title="BUG/BUG_ON"></a>BUG/BUG_ON</h3><p>通过调用非法指令（未定义指令），空指针等进入die调用，或者直接调用panic</p>
+<h3 id="page-fault"><a href="#page-fault" class="headerlink" title="page_fault"></a>page_fault</h3><p>访问非法地址，可能发生内存踩踏，通过RIP异常抛出入手分析</p>
+<h3 id="soft-lockup"><a href="#soft-lockup" class="headerlink" title="soft lockup"></a>soft lockup</h3><p>每一个cpu上都有一个hrtime中断监控的watchdog线程，即hrimte触发的中断上下文会去检测watchdog线程，如果检测到该线程在设定时间内没有调度过，说明该cpu被长时间被占用，调度已经发生异常。原因：==进程上下文关闭抢占==。依赖中断，==如果中断被关闭，则此功能无法正常工作==</p>
+<h3 id="hard-lockup"><a href="#hard-lockup" class="headerlink" title="hard lockup"></a>hard lockup</h3><p>一个cpu如果检测相邻的==cpu中断被关闭==就主动panic，见function watchdog_check_hardlockup_other_cpu，因此在panic中异常中断关闭的cpu也无法处理处理器中断，因此无法刷新缓冲，==sysdump信息因此不可靠==</p>
+<h3 id="硬件喂狗"><a href="#硬件喂狗" class="headerlink" title="硬件喂狗"></a>硬件喂狗</h3><h4 id="单线程喂狗"><a href="#单线程喂狗" class="headerlink" title="单线程喂狗"></a>单线程喂狗</h4><p>需要一个喂狗线程定期对硬件狗操作，如果对硬件狗的操作延误，会导致触发硬狗中断，cpu收到中断在中断上下文进行panic调用</p>
+<ol>
+<li><p>如果硬狗中断被关闭，则功能失效。（==因此硬狗中断需要为不可屏蔽中断==）</p>
+</li>
+<li><p>如果硬狗中断被CPU响应，但是由于异常的cpu中断被关闭，因为异常的cpu缓存无法刷新，sysdump信息因此也不可靠</p>
+</li>
+<li><p>如果一个cpu异常，其他cpu依旧正常喂狗，则监测功能失效</p>
+</li>
+</ol>
+<p>这种设计存在以下缺陷：</p>
+<ol>
+<li>假设CPU0异常，但是其他cpu一直在喂狗，因此无法监控到全部的cpu</li>
+<li>异常cpu因为关闭中断导致无法处理panic发出的处理器中断，因此导致cpu缓存无法刷新</li>
+</ol>
+<h4 id="多线程绑定cpu喂狗"><a href="#多线程绑定cpu喂狗" class="headerlink" title="多线程绑定cpu喂狗"></a>多线程绑定cpu喂狗</h4><p>将cpu和线程绑定，cpu去操作一个全局变量，每一个cpu对应其中的一位，当线程醒来就置1，当全局置1的个数和cpu 正在使用的个数相等时，代表全部cpu都喂狗对应的狗，此时才会去喂硬狗，可以bitmap控制。</p>
+<h2 id="转储内核分析"><a href="#转储内核分析" class="headerlink" title="转储内核分析"></a>转储内核分析</h2><p>在uboot将转储文件导出以后，我们需要通过这些文件配合内核符号映射表vmlinux进行异常现场分析</p>
+<p>需要确定vmlinux和转储文件的kernel版本保持一致，编译环境可能是gcc，也有可能是clang</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> strings vmlinux | grep <span class="string">&quot;Linux version&quot;</span>                </span></span><br><span class="line">Linux version 4.14.199+-ab131  clang version 11.0.1</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> strings sysdump.core | grep <span class="string">&quot;Linux version&quot;</span>    &gt;&gt;sysdump.core为内核转储后合并的文件</span></span><br><span class="line">Linux version 4.14.199+-ab131  clang version 11.0.1</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">或者gcc编译</span><br><span class="line">➜  5.17.0+  strings vmlinux | grep &quot;Linux version&quot;  </span><br><span class="line">Linux version 5.17.0+ (root@sholck) (gcc (Ubuntu 6.5.0-2ubuntu1~16.04) 6.5.0 20181026, GNU ld (GNU Binutils for Ubuntu) 2.26.1) #7 SMP PREEMPT_DYNAMIC Thu Mar 24 14:58:15 CST 2022</span><br><span class="line"></span><br><span class="line">➜  5.17.0+ strings vmcore | grep &quot;Linux version&quot; </span><br><span class="line">Linux version 5.17.0+ (root@sholck) (gcc (Ubuntu 6.5.0-2ubuntu1~16.04) 6.5.0 20181026, GNU ld (GNU Binutils for Ubuntu) 2.26.1) #7 SMP PREEMPT_DYNAMIC Thu Mar 24 14:58:15 CST 2022</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<p>高通camera子系统camss架构，主要是csid-csiphy-ispif部分</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">QUALCOMM CAMERA SUBSYSTEM DRIVER      </span><br><span class="line">M:  Robert Foss &lt;robert.foss@linaro.org&gt;      </span><br><span class="line">M:  Todor Tomov &lt;todor.too@gmail.<span class="keyword">com</span>&gt;      </span><br><span class="line">L:  linux-media@vger.kernel.org                                                                                                                                                                                     </span><br><span class="line">S:  Maintained      </span><br><span class="line">F:  Documentation/admin-guide/media/qcom_camss.rst      </span><br><span class="line">F:  Documentation/devicetree/bindings/media/*camss*      </span><br><span class="line">F:  drivers/media/platform/qcom/camss/ </span><br></pre></td></tr></table></figure>
+<p>之后通过crash工具进行现场分析</p>
+<h3 id="crash"><a href="#crash" class="headerlink" title="crash"></a>crash</h3><h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><ol>
+<li><p>官网：<a href="https://crash-utility.github.io/">https://crash-utility.github.io</a></p>
+</li>
+<li><p>android 项目自带，需要在vendor/xxx/tools目录下检查平台基线是否自带</p>
+</li>
+<li><p>ubuntu本地：sudo apt-get install linux-crashdump    (推荐)</p>
+</li>
+</ol>
+<h4 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h4><p>参数需要设置物理内存起始地址，内核符号映射表，转储内核</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> crash_arm64 -m phys_offset=0x80000000 vmlinux sysdump.core --cpus 8</span></span><br><span class="line"></span><br><span class="line">      KERNEL: vmlinux</span><br><span class="line">    DUMPFILE: all</span><br><span class="line">        CPUS: 8 [OFFLINE: 7]</span><br><span class="line">        DATE: Tue Dec 14 05:44:33 2021</span><br><span class="line">      UPTIME: 00:02:41</span><br><span class="line">LOAD AVERAGE: 5.99, 2.96, 1.16</span><br><span class="line">       TASKS: 1930</span><br><span class="line">    NODENAME: localhost</span><br><span class="line">     RELEASE: 4.14.199+-ab131</span><br><span class="line">     VERSION: #1 SMP PREEMPT Tue Dec 14 03:15:03 CST 2021</span><br><span class="line">     MACHINE: aarch64  (unknown Mhz)</span><br><span class="line">      MEMORY: 4 GB</span><br><span class="line">       PANIC: &quot;Kernel panic - not syncing: sysrq triggered crash&quot;  &gt;&gt;sysrq触发</span><br><span class="line">         PID: 7058</span><br><span class="line">     COMMAND: &quot;sh&quot;</span><br><span class="line">        TASK: ffffffc06a47da00  [THREAD_INFO: ffffffc06a47da00]</span><br><span class="line">         CPU: 3</span><br><span class="line">       STATE: TASK_RUNNING (PANIC）</span><br></pre></td></tr></table></figure>
 
-<h3 id="patchwork"><a href="#patchwork" class="headerlink" title="patchwork"></a>patchwork</h3><p><a href="https://patchwork.kernel.org/">linux-patchwork</a></p>
-<p>可以在patchwork中查看各子系统的通过mailing抓取的patch</p>
-<h3 id="bugzilla"><a href="#bugzilla" class="headerlink" title="bugzilla"></a>bugzilla</h3><p><a href="https://bugzilla.kernel.org/">linux-bugzilla</a></p>
-<p>在这里我们可以查看最近提交的bug.</p>
-<p><img src="/images/linux/linux-bugzilla.png" alt="linux-bugzilla.png"></p>
-<h3 id="wiki"><a href="#wiki" class="headerlink" title="wiki"></a>wiki</h3><p><a href="https://www.wiki.kernel.org/">wiki-linux</a></p>
-<h3 id="IRC"><a href="#IRC" class="headerlink" title="IRC"></a>IRC</h3><p>新建一个IRC网络，输入服务器地址irc.oftc.net和用户名，密码，通过以下进行register</p>
-<figure class="highlight delphi"><table><tr><td class="code"><pre><span class="line"><span class="keyword">REGISTER</span> password e-mail</span><br></pre></td></tr></table></figure>
+<h4 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h4><p>在启动的TUI窗口中，shell命令是可以执行的</p>
+<h5 id="ps"><a href="#ps" class="headerlink" title="ps"></a>ps</h5><p>打印内核中进程的状态，包括tasklet等</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> ps &gt;ps.txt</span></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> ps | grep -n <span class="string">&quot;ffffffc06a47da00&quot;</span></span></span><br><span class="line">1930:&gt;  7058   6808   3  ffffffc06a47da00  RU   0.0 10771096   2696  sh</span><br></pre></td></tr></table></figure>
 
-<p>注册成功，提示</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">Successfully <span class="keyword">set</span> +R <span class="keyword">on</span> your nick.</span><br></pre></td></tr></table></figure>
+<h5 id="bt"><a href="#bt" class="headerlink" title="bt"></a>bt</h5><p>打印堆栈，默认打印crash cpu的堆栈</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> bt</span></span><br><span class="line">PID: 7058   TASK: ffffffc06a47da00  CPU: 3   COMMAND: &quot;sh&quot;</span><br><span class="line"><span class="meta"> #</span><span class="bash">0 [ffffff801582b950] sysdump_panic_event<span class="variable">$8bfd56c0834fe7d208b7e7c52872c4e4</span> at ffffff80087a218c</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">1 [ffffff801582b9b0] <span class="variable">$x</span>.25 at ffffff800826e600</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">2 [ffffff801582bc50] panic at ffffff800823a00c</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">3 [ffffff801582bcb0] sysrq_handle_crash<span class="variable">$330e89e9e6de65c311d08fb99226844d</span> at ffffff80087d3d14</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">4 [ffffff801582bcc0] __handle_sysrq at ffffff80087d3768</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">5 [ffffff801582bd10] <span class="variable">$x</span>.53 at ffffff80087d4dc0</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">6 [ffffff801582bd60] proc_reg_write<span class="variable">$5fc6da0b4e1b06391acfa8bd9d90410e</span> at ffffff80084fa0a4</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">7 [ffffff801582be10] __vfs_write at ffffff8008454d78</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">8 [ffffff801582be40] vfs_write at ffffff80084551b0</span></span><br><span class="line"><span class="meta"> #</span><span class="bash">9 [ffffff801582be90] sys_write at ffffff800845540c</span></span><br><span class="line"><span class="meta">#</span><span class="bash">10 [ffffff801582bff0] el0_svc_naked at ffffff80080844bc</span></span><br><span class="line">     PC: 00000075815348c8   LR: 0000005f4b89b63c   SP: 0000007ff5c9a450</span><br><span class="line">    X29: 0000007ff5c9a4d0  X28: 0000007ff5c9a490  X27: 0000005f4b8c02e8</span><br><span class="line">    X26: 00000075816fe000  X25: 0000000000000063  X24: 0000005f4b89e99c</span><br><span class="line">    X23: 0000005f4b8bf640  X22: 0000007ff5c9a4b0  X21: 0000007ff5c9a4a8</span><br><span class="line">    X20: b4000073f13a5328  X19: 0000000000000002  X18: 0000007581866000</span><br><span class="line">    X17: 00000075815348c0  X16: 0000007581552ef8  X15: 000000000000002f</span><br><span class="line">    X14: 0000000000000072  X13: f790000000012102  X12: 0000000032d3dd57</span><br><span class="line">    X11: 00000000f13a53bc  X10: b4000073f13a53a8   X9: b4000073f13a5328</span><br><span class="line">     X8: 0000000000000040   X7: 0000000000000000   X6: 0000000000000063</span><br><span class="line">     X5: b4000073813a469a   X4: ffffffffffffffff   X3: ffffffffffffffff</span><br><span class="line">     X2: 0000000000000002   X1: b4000073f13a5328   X0: 0000000000000001</span><br><span class="line">    ORIG_X0: 0000000000000001  SYSCALLNO: 40  PSTATE: 00001000</span><br></pre></td></tr></table></figure>
 
-<p>如何加入一个子系统的irc聊天室，见<a href="https://kernelnewbies.org/IRC">linux-IRC</a></p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">Start your favorite IRC client</span><br><span class="line"><span class="built_in">/server </span>irc.oftc.net</span><br><span class="line">/join #kernelnewbies</span><br></pre></td></tr></table></figure>
+<h5 id="log"><a href="#log" class="headerlink" title="log"></a>log</h5><p>打印kernel最后log buffer保存的信息，一般也会包含堆栈和寄存器信息，分析可以对异常有一个大概的了解</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> <span class="built_in">log</span> &gt;log.txt</span></span><br></pre></td></tr></table></figure>
 
-<p>确定子系统聊天室，比如linux-media</p>
-<p><img src="/images/linux/irc-linux-media.png" alt="irc-linux-media.png"></p>
-<h2 id="代码质量"><a href="#代码质量" class="headerlink" title="代码质量"></a>代码质量</h2><h3 id="代码编写规范"><a href="#代码编写规范" class="headerlink" title="代码编写规范"></a>代码编写规范</h3><p>编码规范见<code>Documentation/process/coding-style.rst</code></p>
-<p>中文翻译：<code>Documentation/output/translations/zh_CN/process/coding-style.html</code></p>
-<p>如果通过<font color=#2196F3 >make htmldocs</font>生成过html文档，见<code>Documentation/output/process/coding-style.html</code></p>
-<h3 id="代码提交清单"><a href="#代码提交清单" class="headerlink" title="代码提交清单"></a>代码提交清单</h3><p>提交清单见<code>Documentation/process/submit-checklist.rst </code></p>
-<p>中文翻译：<code>Documentation/output/translations/zh_CN/process/submit-checklist.html</code></p>
-<p>html文档见<code>Documentation/output/process/submit-checklist.html</code></p>
-<h3 id="代码测试"><a href="#代码测试" class="headerlink" title="代码测试"></a>代码测试</h3><h4 id="Sparse"><a href="#Sparse" class="headerlink" title="Sparse"></a>Sparse</h4><p>Sparse是linus自己开发的内核静态分析工具.</p>
-<p>对于sparse，可以警告程序员 用户空间和内核空间地址之间的混淆、big endian和small endian数量的混合、在需 要一组位标志的地方传递整数值等等</p>
-<p>sparse说明见<code>Documentation/dev-tools/sparse.rst</code></p>
-<p>html文档见<code>Documentation/output/dev-tools/sparse.html</code></p>
-<p>本地安装sparse</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">sudo apt-<span class="built_in">get</span> install sparse </span><br></pre></td></tr></table></figure>
+<h5 id="runq"><a href="#runq" class="headerlink" title="runq"></a>runq</h5><p>查看线程列表</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> runq -c 3  &gt;&gt;指定cpu3</span></span><br><span class="line">CPU 3 RUNQUEUE: ffffffc0ffec6700</span><br><span class="line">  CURRENT: PID: 7058   TASK: ffffffc06a47da00  COMMAND: &quot;sh&quot;</span><br><span class="line">  RT PRIO_ARRAY: ffffffc0ffec6868</span><br><span class="line">     [no tasks queued]</span><br><span class="line">  CFS RB_ROOT: ffffffc0ffec6790</span><br><span class="line">     [no tasks queued]</span><br></pre></td></tr></table></figure>
 
-<p>或者编译源码（推荐）</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">git clone gi<span class="variable">t:</span>//git.kernel.org/pub/scm/devel/sparse/sparse.git</span><br><span class="line"><span class="keyword">make</span></span><br><span class="line"><span class="keyword">make</span> install</span><br><span class="line"></span><br><span class="line">//如果缺少依赖包，根据Makefile编写code安装相关</span><br><span class="line">apt-<span class="built_in">get</span> install libxml2</span><br><span class="line">apt-<span class="built_in">get</span> install libxml2-dev</span><br><span class="line"></span><br><span class="line">sudo apt-<span class="built_in">get</span> install sqlite3</span><br><span class="line">sudo apt-<span class="built_in">get</span> install libsqlite3-dev</span><br><span class="line">//如果版本太老，需要从http<span class="variable">s:</span>//www.sqlite.org/download.html下载手动安装</span><br><span class="line">wget http<span class="variable">s:</span>//www.sqlite.org/snapshot/sqlite-snapshot-<span class="number">202110132029</span>.tar.gz --<span class="keyword">no</span>-check-certificate</span><br><span class="line">./configure </span><br><span class="line"><span class="keyword">make</span></span><br><span class="line"><span class="keyword">make</span> install</span><br><span class="line"><span class="keyword">cp</span> sparse /bin/.</span><br><span class="line"><span class="keyword">cp</span> sparse /usr/bin/.</span><br><span class="line"></span><br><span class="line">sudo apt-<span class="built_in">get</span> install libgtk-<span class="number">3</span>-dev</span><br><span class="line">sudo apt-<span class="built_in">get</span> install llvm</span><br></pre></td></tr></table></figure>
+<h5 id="irq"><a href="#irq" class="headerlink" title="irq"></a>irq</h5><p>查看中断数据</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> irq</span></span><br><span class="line">IRQ   IRQ_DESC/_DATA      IRQACTION      NAME</span><br><span class="line">  0       (unused)          (unused)</span><br><span class="line">  1   ffffffc0fa821600      (unused)</span><br><span class="line">  2   ffffffc0fa821800  ffffffc0faaa3d80  &quot;/soc/aon/timer@64470000&quot;</span><br><span class="line">  3   ffffffc0fa821a00      (unused)</span><br><span class="line">  4   ffffffc0fa821c00  ffffffc0faaa4180  &quot;arch_timer&quot;   &gt;&gt;定时器中断</span><br><span class="line">  </span><br><span class="line"><span class="meta">  crash_arm64&gt;</span><span class="bash"> irq 4</span></span><br><span class="line"> IRQ   IRQ_DESC/_DATA      IRQACTION      NAME</span><br><span class="line">  4   ffffffc0fa821c00  ffffffc0faaa4180  &quot;arch_timer&quot;</span><br><span class="line">  </span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> irqaction ffffffc0faaa4180</span></span><br><span class="line">struct irqaction &#123;</span><br><span class="line">  handler = 0xffffff8008f9a078 &lt;arch_timer_handler_phys$5757c1f5416e78392ea0a8126822dd28.cfi_jt&gt;, &gt;&gt;对应中断模块</span><br><span class="line">  dev_id = 0x0,</span><br><span class="line">  percpu_dev_id = 0xffffff8009761480,</span><br><span class="line">  next = 0x0,</span><br><span class="line">  thread_fn = 0x0,</span><br><span class="line">  thread = 0x0,</span><br><span class="line">  secondary = 0x0,</span><br><span class="line">  irq = 4,</span><br><span class="line">  flags = 17412,</span><br><span class="line">  thread_flags = 0,</span><br><span class="line">  thread_mask = 0,</span><br><span class="line">  name = 0xffffff8009304dca &quot;arch_timer&quot;,</span><br><span class="line">  dir = 0x0</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>即使是本地编译的sparse，依旧会出现以下错误</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  v4l2-core gi<span class="variable">t:</span>(master) sparse -<span class="keyword">a</span> tuner-core.<span class="keyword">c</span></span><br><span class="line">tuner-core.<span class="keyword">c</span>:<span class="number">18</span>:<span class="number">11</span>: error: unable <span class="keyword">to</span> <span class="keyword">open</span> <span class="string">&#x27;linux/module.h&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>查看各中断触发在cpu上触发次数，也可以看出中断控制器驱动版本GICv3</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> irq -s</span></span><br><span class="line">           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7</span><br><span class="line">  2:       5040       2761       2996       2917       4043       4225        999       1438    GICv3 /soc/aon/timer@64470000</span><br><span class="line">  4:      35885      27954      25117      23517      22156      20163      29762      28382    GICv3 arch_timer</span><br></pre></td></tr></table></figure>
 
-<h4 id="Coccinelle"><a href="#Coccinelle" class="headerlink" title="Coccinelle"></a>Coccinelle</h4><p>Coccinelle能够发现各种潜在的编码问题；它还可以为这些问题提出修复方案.</p>
-<p>sparse说明见<code>Documentation/dev-tools/coccinelle.rst</code></p>
-<p>内核语义补丁见<code>scripts/coccinelle</code></p>
-<p>html文档见<code>Documentation/output/dev-tools/coccinelle.html</code></p>
-<p>本地安装</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">sudo apt-<span class="built_in">get</span> install coccinelle</span><br></pre></td></tr></table></figure>
+<h5 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h5><p>查看数据结构成员，并打印结构体大小，默认下直接输出结构名即可打印</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> thread_struct  &gt;&gt;直接输入结构体即可</span></span><br><span class="line">struct thread_struct &#123;</span><br><span class="line">    struct cpu_context cpu_context;</span><br><span class="line">    unsigned long tp_value;</span><br><span class="line">    unsigned long tp2_value;</span><br><span class="line">    struct fpsimd_state fpsimd_state;</span><br><span class="line">    unsigned long fault_address;</span><br><span class="line">    unsigned long fault_code;</span><br><span class="line">    struct debug_info debug;</span><br><span class="line">&#125;</span><br><span class="line">SIZE: 960</span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> struct thread_struct -o &gt;&gt;可以加选项-o(显示成员偏移)或者-x</span></span><br><span class="line">struct thread_struct &#123;</span><br><span class="line">    [0] struct cpu_context cpu_context;</span><br><span class="line">  [104] unsigned long tp_value;</span><br><span class="line">  [112] unsigned long tp2_value;</span><br><span class="line">  [128] struct fpsimd_state fpsimd_state;</span><br><span class="line">  [672] unsigned long fault_address;</span><br><span class="line">  [680] unsigned long fault_code;</span><br><span class="line">  [688] struct debug_info debug;</span><br><span class="line">&#125;</span><br><span class="line">SIZE: 960</span><br></pre></td></tr></table></figure>
 
-<p>源码编译安装Coccinelle</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">git clone git@github.<span class="keyword">com</span>:coccinelle/coccinelle.git</span><br><span class="line">sudo apt-<span class="built_in">get</span> install autoconf</span><br><span class="line"></span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml</span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml-interp</span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml-native-compilers</span><br><span class="line">sudo apt-<span class="built_in">get</span> install ocaml-nox</span><br><span class="line"></span><br><span class="line"><span class="keyword">cp</span> spatch.<span class="keyword">opt</span> /usr/bin/.</span><br><span class="line"></span><br><span class="line">tes<span class="variable">t:</span></span><br><span class="line"> spatch -sp_file demos/simple.cocci demos/simple.<span class="keyword">c</span> -<span class="keyword">o</span> /tmp/new_simple.<span class="keyword">c</span></span><br></pre></td></tr></table></figure>
+<h5 id="rd"><a href="#rd" class="headerlink" title="rd"></a>rd</h5><p>打印指定内存地址的信息</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> sysrq_crash_op</span></span><br><span class="line">sysrq_crash_op = $23 = &#123;</span><br><span class="line">  handler = 0xffffff8008f9a8fc &lt;sysrq_handle_crash$330e89e9e6de65c311d08fb99226844d.cfi_jt&gt;,</span><br><span class="line">  help_msg = 0xffffff8009364302 &quot;crash(c)&quot;,</span><br><span class="line">  action_msg = 0xffffff800931823a &quot;Trigger a crash&quot;,</span><br><span class="line">  enable_mask = 8</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> sysrq_key_op -o</span></span><br><span class="line">struct sysrq_key_op &#123;</span><br><span class="line">   [0] void (*handler)(int);</span><br><span class="line">   [8] char *help_msg;</span><br><span class="line">  [16] char *action_msg;</span><br><span class="line">  [24] int enable_mask;</span><br><span class="line">&#125;</span><br><span class="line">SIZE: 32</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd 0xffffff8009364302 2</span></span><br><span class="line">ffffff8009364302:  2963286873617263 28746f6f62657200   crash(c).reboot(</span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd 0xffffff800931823a 2</span></span><br><span class="line">ffffff800931823a:  2072656767697254 0068736172632061   Trigger a crash.</span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd sysrq_crash_op 4   </span></span><br><span class="line">ffffff8009bbf798:  ffffff8008f9a8fc ffffff8009364302   .........C6.....</span><br><span class="line">ffffff8009bbf7a8:  ffffff800931823a 0000000000000008   :.1.............</span><br></pre></td></tr></table></figure>
 
-<p>测试</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ spatch -sp_file demos/simple.cocci demos/simple.<span class="keyword">c</span> -<span class="keyword">o</span> /tmp/new_simple.<span class="keyword">c</span></span><br><span class="line">init_defs_builtin<span class="variable">s:</span> /usr/lib/coccinelle/standard.h</span><br><span class="line">HANDLING: demos/simple.<span class="keyword">c</span></span><br><span class="line">diff = </span><br><span class="line">--- demos/simple.<span class="keyword">c</span></span><br><span class="line">+++ /tmp/cocci-output-<span class="number">859</span>-aeb2ab-simple.<span class="keyword">c</span></span><br><span class="line">@@ -<span class="number">1</span>,<span class="number">4</span> +<span class="number">1</span>,<span class="number">4</span> @@</span><br><span class="line"> <span class="keyword">int</span> main(<span class="keyword">int</span> i) &#123;</span><br><span class="line">-  f(&quot;ca va&quot;);</span><br><span class="line">-  f(g(&quot;ca va pas&quot;));</span><br><span class="line">+  f(&quot;ca va&quot;, 3);</span><br><span class="line">+  f(g(&quot;ca va pas&quot;), 3);</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line">//测试ocamlrun报错</span><br><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ ocamlrun spatch -sp_file demos/simple.cocci demos/simple.<span class="keyword">c</span> -<span class="keyword">o</span> /tmp/new_simple.<span class="keyword">c</span></span><br><span class="line">Fatal error: the <span class="keyword">file</span> <span class="string">&#x27;/usr/bin/spatch&#x27;</span> <span class="keyword">is</span> not <span class="keyword">a</span> bytecode <span class="built_in">executable</span> <span class="keyword">file</span></span><br><span class="line"></span><br><span class="line">版面check</span><br><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ ocaml -<span class="keyword">version</span>                                                                 </span><br><span class="line">The OCaml toplevel, <span class="keyword">version</span> <span class="number">4.02</span>.<span class="number">3</span></span><br><span class="line"></span><br><span class="line">➜  coccinelle gi<span class="variable">t:</span>(master) ✗ camlp4 -<span class="keyword">version</span></span><br><span class="line"><span class="number">4.02</span>.<span class="number">3</span></span><br><span class="line"></span><br><span class="line">貌似从ocaml <span class="number">4.0</span>.<span class="number">2</span>开始，camlp4已经被遗弃使用</span><br></pre></td></tr></table></figure>
+<p>上面正确的解析为 0x63为c  0x72为r,  0x61为a，对应2963286873617263中的后三个字节</p>
+<h5 id="dis"><a href="#dis" class="headerlink" title="dis"></a>dis</h5><p>反编译 </p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> dis msleep -lx</span></span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1919</span><br><span class="line">0xffffff80082e8bdc &lt;$x.165&gt;:    stp     x29, x30, [sp,#-32]!</span><br><span class="line">0xffffff80082e8be0 &lt;msleep+0x4&gt;:        stp     x20, x19, [sp,#16]</span><br><span class="line">0xffffff80082e8be4 &lt;msleep+0x8&gt;:        mov     x29, sp</span><br><span class="line">0xffffff80082e8be8 &lt;msleep+0xc&gt;:        mov     w19, w0</span><br><span class="line">0xffffff80082e8bec &lt;msleep+0x10&gt;:       nop</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/time.c: 616</span><br><span class="line">0xffffff80082e8bf0 &lt;msleep+0x14&gt;:       mov     w8, w19</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1920</span><br><span class="line">0xffffff80082e8bf4 &lt;msleep+0x18&gt;:       cmp     w19, #0x0</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/time.c: 616</span><br><span class="line">0xffffff80082e8bf8 &lt;msleep+0x1c&gt;:       add     x8, x8, #0x3</span><br><span class="line">0xffffff80082e8bfc &lt;msleep+0x20&gt;:       mov     x9, #0x3fffffffffffffff         // #4611686018427387903</span><br><span class="line">0xffffff80082e8c00 &lt;msleep+0x24&gt;:       lsr     x8, x8, #2</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1920</span><br><span class="line">0xffffff80082e8c04 &lt;msleep+0x28&gt;:       csinc   x0, x9, x8, lt</span><br><span class="line">0xffffff80082e8c08 &lt;msleep+0x2c&gt;:       mov     w19, #0x2                       // #2</span><br><span class="line">0xffffff80082e8c0c &lt;msleep+0x30&gt;:       mrs     x20, sp_el0</span><br><span class="line">g/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1793</span><br><span class="line">0xffffff80082e8c10 &lt;msleep+0x34&gt;:       str     x19, [x20,#32]</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1794</span><br><span class="line">0xffffff80082e8c14 &lt;msleep+0x38&gt;:       bl      0xffffff8008f7a4d4 &lt;$x.136&gt;</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1922</span><br><span class="line">0xffffff80082e8c18 &lt;msleep+0x3c&gt;:       cbnz    x0, 0xffffff80082e8c10 &lt;msleep+0x34&gt;</span><br><span class="line">/code/bsp/kernel/kernel4.14/kernel/time/timer.c: 1924</span><br><span class="line">0xffffff80082e8c1c &lt;msleep+0x40&gt;:       ldp     x20, x19, [sp,#16]</span><br><span class="line">0xffffff80082e8c20 &lt;msleep+0x44&gt;:       ldp     x29, x30, [sp],#32</span><br><span class="line">0xffffff80082e8c24 &lt;msleep+0x48&gt;:       ret</span><br></pre></td></tr></table></figure>
 
-<h2 id="提交补丁"><a href="#提交补丁" class="headerlink" title="提交补丁"></a>提交补丁</h2><h3 id="配置git"><a href="#配置git" class="headerlink" title="配置git"></a>配置git</h3><p>在.git/config中增加以下部分</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">[user]    </span><br><span class="line">    email = xiaer1921@gmail.<span class="keyword">com</span>   </span><br><span class="line">    name = xiaer1921    </span><br><span class="line">[core]    </span><br><span class="line">    editor = <span class="keyword">vim</span>    </span><br><span class="line">[color]    </span><br><span class="line">    ui = auto    </span><br><span class="line">[sendemail]    </span><br><span class="line">    smtpserver = smtp.gmail.<span class="keyword">com</span>    </span><br><span class="line">    smtpserverport = <span class="number">587</span>                                                                              </span><br><span class="line">    smtpencryption = tls    </span><br><span class="line">    smtpuser = xiaer1921@gmail.<span class="keyword">com</span> </span><br></pre></td></tr></table></figure>
+<h5 id="vtop"><a href="#vtop" class="headerlink" title="vtop"></a>vtop</h5><p>虚拟地址到物理地址的映射</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> vtop 0xffffff8009364302</span></span><br><span class="line">VIRTUAL           PHYSICAL</span><br><span class="line">ffffff8009364302  81364302</span><br><span class="line"></span><br><span class="line">PAGE DIRECTORY: ffffff800a063000</span><br><span class="line">   PGD: ffffff800a063000 =&gt; 17fffd003</span><br><span class="line">   PMD: ffffffc0ffffd248 =&gt; 81200791   页中间目录，二级页表索引中可以称为页表，存放PTE页表项</span><br><span class="line">  PAGE: 81200000  (2MB)    页表项+偏移</span><br><span class="line"></span><br><span class="line">  PTE     PHYSICAL  FLAGS</span><br><span class="line">81200791  81200000  (VALID|RDONLY|SHARED|AF)    </span><br><span class="line"></span><br><span class="line">      PAGE               PHYSICAL      MAPPING       INDEX CNT FLAGS</span><br><span class="line">ffffffbf0004d900         81364000                0        0  1 1000 reserved</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> rd -p 81364302  打印物理地址内的内存信息</span></span><br><span class="line">        81364302:  2963286873617263                    crash(c)</span><br></pre></td></tr></table></figure>
 
-<h3 id="制作补丁"><a href="#制作补丁" class="headerlink" title="制作补丁"></a>制作补丁</h3><p>举例：scripts/gdb/linux/tasks.py 没有增加SPDX许可，增加许可</p>
-<p>文件规范检查</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">./scripts/checkpatch.pl --<span class="keyword">file</span> scripts/gdb/linux/tasks.<span class="keyword">py</span></span><br></pre></td></tr></table></figure>
+<h5 id="sym"><a href="#sym" class="headerlink" title="sym"></a>sym</h5><p>功能：映射转化</p>
+<p>打印全部的符号表：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">crash_arm64&gt;</span><span class="bash"> sym -l | grep -n <span class="string">&quot;sysrq_crash_op&quot;</span></span></span><br><span class="line">265279:ffffff8009bbf798 (d) sysrq_crash_op</span><br></pre></td></tr></table></figure>
 
-<p>常见的错误如下</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">//第一行没有增加SPDX许可，警告如下</span><br><span class="line">WARNING: Missing <span class="built_in">or</span> malformed SPDX-License-Identifier <span class="keyword">tag</span> in <span class="built_in">line</span> <span class="number">1</span></span><br><span class="line">//第一行正确格式</span><br><span class="line"># SPDX-License-Identifier: GPL-<span class="number">2.0</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="提交commit"><a href="#提交commit" class="headerlink" title="提交commit"></a>提交commit</h4><figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">git add scripts<span class="regexp">/gdb/</span>linux/tasks.py</span><br><span class="line">git commit -s <span class="regexp">//</span>进行签名</span><br></pre></td></tr></table></figure>
-
-<p>提交描述中规范如下：</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">//第一行对修改的简短描述，将成为邮件的标题</span><br><span class="line">//第二行空行</span><br><span class="line">//第三行，对修改的详细描述，将成为邮件内容</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
-
-<h4 id="生成patch"><a href="#生成patch" class="headerlink" title="生成patch"></a>生成patch</h4><p>针对最近的commit生成patch <code>git format-patch -1 -o .</code> -1为最近的commit</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  linux gi<span class="variable">t:</span>(master) git format-patch HEAD~</span><br><span class="line"><span class="number">0001</span>-scripts-gdb-<span class="built_in">add</span>-SPDX-license-<span class="keyword">for</span>-scripts-gdb-linux-t.patch</span><br></pre></td></tr></table></figure>
-
-<p><font color=#2196F3 >patch规范检查</font> </p>
-<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line">./scripts/checkpatch.pl --file 0001-scripts-gdb-add-SPDX-license-for-scripts-gdb-linux-t.patch</span><br><span class="line"><span class="comment">//如果没有增加第三行详细描述部分，会进行警告</span></span><br><span class="line"><span class="symbol">WARNING: </span>Missing commit description - Add an appropriate one</span><br><span class="line"><span class="comment">//规范检查正确</span></span><br><span class="line">0001-scripts-gdb-add-SPDX-license-for-scripts-gdb-linux-t.patch has no obvious style problems and is ready for submission.</span><br></pre></td></tr></table></figure>
-
-<p>获取patch的维护人员</p>
-<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">➜  linux git:(master) ./scripts/get_maintainer.pl <span class="number">0001</span>-scripts-gdb-add-SPDX-license-<span class="keyword">for</span>-scripts-gdb-linux-t.patch </span><br><span class="line">Jan Kiszka &lt;jan.<span class="symbol">kiszka@</span>siemens.com&gt; (supporter:GDB KERNEL DEBUGGING HELPER SCRIPTS,commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%)</span><br><span class="line">Kieran Bingham &lt;<span class="symbol">kbingham@</span>kernel.org&gt; (supporter:GDB KERNEL DEBUGGING HELPER SCRIPTS)</span><br><span class="line">Andrew Morton &lt;<span class="symbol">akpm@</span>linux-foundation.org&gt; (commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%)</span><br><span class="line">Ritesh Harjani &lt;<span class="symbol">riteshh@</span>linux.ibm.com&gt; (commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,authored:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,added_lines:<span class="number">5</span>/<span class="number">6</span>=<span class="number">83</span>%,removed_lines:<span class="number">4</span>/<span class="number">5</span>=<span class="number">80</span>%)</span><br><span class="line">xiaer1921 &lt;<span class="symbol">xiaer1921@</span>aliyun.com&gt; (commit_signer:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,authored:<span class="number">1</span>/<span class="number">2</span>=<span class="number">50</span>%,added_lines:<span class="number">1</span>/<span class="number">6</span>=<span class="number">17</span>%,removed_lines:<span class="number">1</span>/<span class="number">5</span>=<span class="number">20</span>%)</span><br><span class="line">linux-<span class="symbol">kernel@</span>vger.kernel.org (open list)</span><br></pre></td></tr></table></figure>
-
-<p>发送patch</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">git send-email --<span class="keyword">to</span> jan.kiszka@siemens.<span class="keyword">com</span> --<span class="keyword">to</span> kbingham@kernel.org --<span class="keyword">cc</span> linux-kernel@vger.kernel.org <span class="number">0001</span>-scripts-gdb-<span class="built_in">add</span>-SPDX-license-<span class="keyword">for</span>-scripts-gdb-linux-t.patch</span><br></pre></td></tr></table></figure>
-
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
-<li><a href="http://tinylab.org/upstream-patches-to-linux-mainline/">泰晓科技-Linux upstream: 给 Linus 发个 patch 吧</a></li>
-<li><a href="http://tinylab.org/wp-content/uploads/2016/01/linux-community-and-upstream-linux-codes.pdf">宋宝华-Linux community and Upstream Linux Codes</a></li>
-<li><a href="http://tinylab.org/wp-content/uploads/2013/06/how-to-contribute-to-linux-mainline.pdf">泰晓科技-how-to-contribute-to-linux-mainline</a></li>
-<li><a href="http://tinylab.org/embedded-linux-kernel-mailining/">泰晓科技-如何贡献内核补丁</a></li>
-<li><a href="http://tinylab.org/latest-linux-code/">泰晓科技-如何获取某个 Linux 子系统上游的最新代码</a></li>
-<li><a href="https://zhuanlan.zhihu.com/p/75366661">hello小崔的linux</a></li>
-<li><a href="https://blog.csdn.net/cui841923894/article/details/81545627">hello小崔-LTP提交补丁</a></li>
-<li><a href="https://www.cnblogs.com/wang_yb/p/3575039.html">内核工具 – Sparse 简介</a></li>
-<li><a href="https://www.cnblogs.com/bhlsheji/p/5386611.html">请善用工具审核您的内核代码</a></li>
+<p>符号转化为虚拟地址</p>
+<h2 id="缩略语"><a href="#缩略语" class="headerlink" title="缩略语"></a>缩略语</h2><ol>
+<li>FIQ Fast Interrupt Request 快速中断模式</li>
+<li>NMI No-Maskable Interrupt 不可屏蔽中断</li>
+<li>IPI Inter-Process Interrupt  处理器中断</li>
+<li>GIC Generic Interrupt Controller 中断控制器</li>
+<li>SGI Software Generated Interrupt 软件触发中断，也称为IPI中断</li>
+<li>ISR interrupt service routine 中断服务程序</li>
+<li>FIQ 快速中断 </li>
 </ol>
 ]]></content>
       <categories>
         <category>linux</category>
       </categories>
       <tags>
+        <tag>稳定性</tag>
         <tag>linux</tag>
-        <tag>mailing list</tag>
-        <tag>IRC</tag>
-        <tag>patchwork</tag>
-        <tag>bugzilla</tag>
-        <tag>sparse</tag>
-        <tag>coccinelle</tag>
+        <tag>kernel-tool</tag>
+        <tag>程序调试</tag>
+        <tag>sysdump</tag>
+        <tag>crash</tag>
+        <tag>kdump</tag>
       </tags>
   </entry>
   <entry>
@@ -1184,10 +1224,10 @@
       </categories>
       <tags>
         <tag>linux</tag>
-        <tag>gdb</tag>
         <tag>内核编译</tag>
         <tag>busybox</tag>
         <tag>QEMU</tag>
+        <tag>gdb</tag>
       </tags>
   </entry>
 </search>
