@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-03-31T10:12:19.363Z</updated>
+  <updated>2022-04-15T08:28:30.234Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -15,6 +15,141 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>crash库的开源提交</title>
+    <link href="http://sholck.top/archives/14.html"/>
+    <id>http://sholck.top/archives/14.html</id>
+    <published>2022-04-14T16:00:00.000Z</published>
+    <updated>2022-04-15T08:28:30.234Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;crash库的开源提交&quot;&gt;&lt;a href=&quot;#crash库的开源提交&quot; class=&quot;headerlink&quot; title=&quot;crash库的开源提交&quot;&gt;&lt;/a&gt;crash库的开源提交&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在学习crash分析kernel 5.17.0+ dump时，遇到一些问题&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="开源" scheme="http://sholck.top/categories/%E5%BC%80%E6%BA%90/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="crash" scheme="http://sholck.top/tags/crash/"/>
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+    <category term="slab&amp;slub" scheme="http://sholck.top/tags/slab-slub/"/>
+    
+    <category term="开源" scheme="http://sholck.top/tags/%E5%BC%80%E6%BA%90/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>gdb调试linux内核&amp;驱动模块</title>
+    <link href="http://sholck.top/archives/15.html"/>
+    <id>http://sholck.top/archives/15.html</id>
+    <published>2022-04-14T16:00:00.000Z</published>
+    <updated>2022-04-15T11:29:10.868Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;gdb调试linux内核-amp-驱动模块&quot;&gt;&lt;a href=&quot;#gdb调试linux内核-amp-驱动模块&quot; class=&quot;headerlink&quot; title=&quot;gdb调试linux内核&amp;amp;驱动模块&quot;&gt;&lt;/a&gt;gdb调试linux内核&amp;amp;驱动模块&lt;/h1&gt;&lt;p&gt;在linux学习过程中，需要针对内核和动态模块进行调试，最常用的方法是gdb，但是&lt;a href=&quot;https://docs.kernel.org/dev-tools/gdb-kernel-debugging.html&quot;&gt;linux gdb文档&lt;/a&gt;中描述的不够详细，在学习调试过程中碰到了不少坑并做如下记录。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="linux模块" scheme="http://sholck.top/tags/linux%E6%A8%A1%E5%9D%97/"/>
+    
+    <category term="notifier" scheme="http://sholck.top/tags/notifier/"/>
+    
+    <category term="链表" scheme="http://sholck.top/tags/%E9%93%BE%E8%A1%A8/"/>
+    
+    <category term="objdump" scheme="http://sholck.top/tags/objdump/"/>
+    
+    <category term="nm" scheme="http://sholck.top/tags/nm/"/>
+    
+    <category term="linux-gdb-helper" scheme="http://sholck.top/tags/linux-gdb-helper/"/>
+    
+    <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
+    
+    <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
+    
+    <category term="nokaslr" scheme="http://sholck.top/tags/nokaslr/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>linux-likely学习</title>
+    <link href="http://sholck.top/archives/13.html"/>
+    <id>http://sholck.top/archives/13.html</id>
+    <published>2022-04-14T16:00:00.000Z</published>
+    <updated>2022-04-15T10:58:14.263Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;linux-likely学习&quot;&gt;&lt;a href=&quot;#linux-likely学习&quot; class=&quot;headerlink&quot; title=&quot;linux-likely学习&quot;&gt;&lt;/a&gt;linux-likely学习&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在日常的工作和学习中，经常发现likely和unlikely的使用，在通知链节点注册时，有如下函数&lt;/p&gt;
+&lt;figure class=&quot;highlight c&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;17&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;notifier_chain_register&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(struct notifier_block **nl,                                                                                                                                                      &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;params&quot;&gt;                                   struct notifier_block *n)&lt;/span&gt;    &lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;/span&gt;&amp;#123;                                                                  &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; ((*nl) != &lt;span class=&quot;literal&quot;&gt;NULL&lt;/span&gt;) &amp;#123;                                     &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (unlikely((*nl) == n)) &amp;#123;                               &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                        WARN(&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&amp;quot;notifier callback %ps already registered&amp;quot;&lt;/span&gt;,    &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                             n-&amp;gt;notifier_call);                               &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; -EEXIST;                          &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                &amp;#125;                                                &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (n-&amp;gt;priority &amp;gt; (*nl)-&amp;gt;priority)               &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                        &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;                                   &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;                nl = &amp;amp;((*nl)-&amp;gt;next);                                        &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &amp;#125;                                                        &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        n-&amp;gt;next = *nl;                                        &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        rcu_assign_pointer(*nl, n);                           &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;;    &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;这里通过遍历节点和插入节点地址对比，防止程序运行时重复插入通知链节点。当然，重复插入这种情况下是非常少见的，因此编译器针对此进行了性能优化。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+    <category term="objdump" scheme="http://sholck.top/tags/objdump/"/>
+    
+    <category term="nm" scheme="http://sholck.top/tags/nm/"/>
+    
+    <category term="likely" scheme="http://sholck.top/tags/likely/"/>
+    
+    <category term="内建函数" scheme="http://sholck.top/tags/%E5%86%85%E5%BB%BA%E5%87%BD%E6%95%B0/"/>
+    
+    <category term="gcc" scheme="http://sholck.top/tags/gcc/"/>
+    
+    <category term="编译优化" scheme="http://sholck.top/tags/%E7%BC%96%E8%AF%91%E4%BC%98%E5%8C%96/"/>
+    
+    <category term="汇编" scheme="http://sholck.top/tags/%E6%B1%87%E7%BC%96/"/>
+    
+    <category term="模块编译" scheme="http://sholck.top/tags/%E6%A8%A1%E5%9D%97%E7%BC%96%E8%AF%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>linux-通知链notifier学习</title>
+    <link href="http://sholck.top/archives/12.html"/>
+    <id>http://sholck.top/archives/12.html</id>
+    <published>2022-04-14T16:00:00.000Z</published>
+    <updated>2022-04-15T11:14:43.538Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;linux-通知链学习&quot;&gt;&lt;a href=&quot;#linux-通知链学习&quot; class=&quot;headerlink&quot; title=&quot;linux-通知链学习&quot;&gt;&lt;/a&gt;linux-通知链学习&lt;/h1&gt;&lt;h2 id=&quot;实现&quot;&gt;&lt;a href=&quot;#实现&quot; class=&quot;headerlink&quot; title=&quot;实现&quot;&gt;&lt;/a&gt;实现&lt;/h2&gt;&lt;p&gt;通知链notifier的实现为：A模块实现维护一个具备高优先级顺序的单向节点链表notifier，每一个节点有对应的函数指针和优先级。内核中的其他子系统模块B，C 如果对A中的事件感兴趣，那么需要向notifier上挂在一个子节点，并在此节点上注册回调。当事件发生时，遍历notifier上所有节点，并通过回调通知模块B，C，然后根据事件进行对应的处理。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="notifier" scheme="http://sholck.top/tags/notifier/"/>
+    
+    <category term="链表" scheme="http://sholck.top/tags/%E9%93%BE%E8%A1%A8/"/>
+    
+    <category term="unlikely" scheme="http://sholck.top/tags/unlikely/"/>
+    
+    <category term="modprobe" scheme="http://sholck.top/tags/modprobe/"/>
+    
+  </entry>
   
   <entry>
     <title>动态模块加载异常</title>
@@ -68,58 +203,6 @@
   </entry>
   
   <entry>
-    <title>linux内核开发学习手册-内核许可证</title>
-    <link href="http://sholck.top/archives/10.html"/>
-    <id>http://sholck.top/archives/10.html</id>
-    <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-03-30T09:22:41.494Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;a href=&quot;#linux内核开发学习手册-内核许可证&quot; class=&quot;headerlink&quot; title=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;/a&gt;linux内核开发学习手册-内核许可证&lt;/h1&gt;&lt;p&gt;原文见：内核开发文档-Linux kernel licensing rules(Linux内核许可规则)&lt;/p&gt;
-&lt;h2 id=&quot;内核通用许可证&quot;&gt;&lt;a href=&quot;#内核通用许可证&quot; class=&quot;headerlink&quot; title=&quot;内核通用许可证&quot;&gt;&lt;/a&gt;内核通用许可证&lt;/h2&gt;&lt;ul&gt;
-&lt;li&gt;linux内核虽然是开源的，但是为了避免开发者的心血被不良厂商赚取利益等和保护开源环境，因此是有基于GPL-2.0() 的通用公共许可证作为法律保护的，具体的描述见&lt;font color=#2196F3 &gt;COPYING&lt;/font&gt;文件。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;ul&gt;
-&lt;li&gt;所有的内核源文件都需要标志许可证，而且这个许可证是可以与GPL-2.0兼容的，但是UAPI是作为例外的，因为是非内核的软件如果与内核通信，需要包含此头文件，但是我们不能要求该通信软件也受此许可证限制，因此此类特殊的例外许可描述也会被记录。&lt;/li&gt;
-&lt;/ul&gt;</summary>
-    
-    
-    
-    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
-    
-    
-    <category term="linux哲学" scheme="http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/"/>
-    
-    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>内核开发学习手册-内核驱动接口</title>
-    <link href="http://sholck.top/archives/9.html"/>
-    <id>http://sholck.top/archives/9.html</id>
-    <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-03-30T09:22:53.618Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;a href=&quot;#内核开发学习手册-内核驱动接口&quot; class=&quot;headerlink&quot; title=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;/a&gt;内核开发学习手册-内核驱动接口&lt;/h1&gt;&lt;p&gt;针对内核，无论是开发还是用户，我们所希望的是稳定的驱动功能，而稳定的驱动和有稳定的内核接口之间的联系，需要我们去思考，有助于理解linux的开发哲学。&lt;/p&gt;
-&lt;p&gt;下文解释了：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;内核没有二进制内核接口&lt;/li&gt;
-&lt;li&gt;内核的源代码接口不稳定</summary>
-    
-    
-    
-    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
-    
-    
-    <category term="linux哲学" scheme="http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/"/>
-    
-    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
     <title>内核补丁提交</title>
     <link href="http://sholck.top/archives/8.html"/>
     <id>http://sholck.top/archives/8.html</id>
@@ -152,6 +235,58 @@
   </entry>
   
   <entry>
+    <title>linux内核开发学习手册-内核许可证</title>
+    <link href="http://sholck.top/archives/10.html"/>
+    <id>http://sholck.top/archives/10.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:22:41.494Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;a href=&quot;#linux内核开发学习手册-内核许可证&quot; class=&quot;headerlink&quot; title=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;/a&gt;linux内核开发学习手册-内核许可证&lt;/h1&gt;&lt;p&gt;原文见：内核开发文档-Linux kernel licensing rules(Linux内核许可规则)&lt;/p&gt;
+&lt;h2 id=&quot;内核通用许可证&quot;&gt;&lt;a href=&quot;#内核通用许可证&quot; class=&quot;headerlink&quot; title=&quot;内核通用许可证&quot;&gt;&lt;/a&gt;内核通用许可证&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;linux内核虽然是开源的，但是为了避免开发者的心血被不良厂商赚取利益等和保护开源环境，因此是有基于GPL-2.0() 的通用公共许可证作为法律保护的，具体的描述见&lt;font color=#2196F3 &gt;COPYING&lt;/font&gt;文件。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ul&gt;
+&lt;li&gt;所有的内核源文件都需要标志许可证，而且这个许可证是可以与GPL-2.0兼容的，但是UAPI是作为例外的，因为是非内核的软件如果与内核通信，需要包含此头文件，但是我们不能要求该通信软件也受此许可证限制，因此此类特殊的例外许可描述也会被记录。&lt;/li&gt;
+&lt;/ul&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="linux哲学" scheme="http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>内核开发学习手册-内核驱动接口</title>
+    <link href="http://sholck.top/archives/9.html"/>
+    <id>http://sholck.top/archives/9.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:22:53.618Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;a href=&quot;#内核开发学习手册-内核驱动接口&quot; class=&quot;headerlink&quot; title=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;/a&gt;内核开发学习手册-内核驱动接口&lt;/h1&gt;&lt;p&gt;针对内核，无论是开发还是用户，我们所希望的是稳定的驱动功能，而稳定的驱动和有稳定的内核接口之间的联系，需要我们去思考，有助于理解linux的开发哲学。&lt;/p&gt;
+&lt;p&gt;下文解释了：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;内核没有二进制内核接口&lt;/li&gt;
+&lt;li&gt;内核的源代码接口不稳定</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="linux哲学" scheme="http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/"/>
+    
+  </entry>
+  
+  <entry>
     <title>程序分析利器gdb</title>
     <link href="http://sholck.top/archives/3.html"/>
     <id>http://sholck.top/archives/3.html</id>
@@ -172,11 +307,11 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
-    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
-    
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
@@ -200,9 +335,9 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
-    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
-    
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
@@ -227,11 +362,11 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
     <category term="strace" scheme="http://sholck.top/tags/strace/"/>
     
     <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
-    
-    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
@@ -254,17 +389,17 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
-    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
-    
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="crash" scheme="http://sholck.top/tags/crash/"/>
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
     <category term="程序调试" scheme="http://sholck.top/tags/%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95/"/>
     
     <category term="sysdump" scheme="http://sholck.top/tags/sysdump/"/>
-    
-    <category term="crash" scheme="http://sholck.top/tags/crash/"/>
     
     <category term="kdump" scheme="http://sholck.top/tags/kdump/"/>
     
@@ -296,13 +431,13 @@
     
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
     <category term="内核编译" scheme="http://sholck.top/tags/%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91/"/>
     
     <category term="busybox" scheme="http://sholck.top/tags/busybox/"/>
     
     <category term="QEMU" scheme="http://sholck.top/tags/QEMU/"/>
-    
-    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
     
   </entry>
   
