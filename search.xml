@@ -163,6 +163,200 @@
       </tags>
   </entry>
   <entry>
+    <title></title>
+    <url>/archives/0.html</url>
+    <content><![CDATA[<figure class="highlight coq"><table><tr><td class="code"><pre><span class="line">flowchart LR </span><br><span class="line"></span><br><span class="line">A[Hard] --&gt;|<span class="type">Text</span>| <span class="type">B</span>(Round)</span><br><span class="line">B --&gt; C&#123;Decision&#125;</span><br><span class="line">C --&gt;|<span class="type">One</span>| <span class="type">D</span>[Result <span class="number">1</span>]</span><br><span class="line">C --&gt;|<span class="type">Two</span>| <span class="type">E</span>[Result <span class="number">2</span>]</span><br></pre></td></tr></table></figure>
+]]></content>
+  </entry>
+  <entry>
+    <title>Kbuild-Makefile学习</title>
+    <url>/archives/16.html</url>
+    <content><![CDATA[<h1 id="Kbuild学习"><a href="#Kbuild学习" class="headerlink" title="Kbuild学习"></a>Kbuild学习</h1><p>Kbuild的学习主要从三部分学习的</p>
+<ol>
+<li>驱动模块的构建</li>
+<li>vmlinux的构建</li>
+<li>bzImage的构建</li>
+</ol>
+<p>关于Kbuild，可以参考<a href="https://www.kernel.org/doc/html/v5.18-rc3/kbuild/makefiles.html#">Kbuild官方文档</a></p>
+<p>关于Makefile构建linux的大体框架，见<a href="https://www.kernel.org/doc/html/v5.18-rc3/kbuild/makefiles.html#architecture-makefiles">Makefile框架</a></p>
+<a id="more"></a>
+
+<h2 id="须知"><a href="#须知" class="headerlink" title="须知"></a>须知</h2><p>下面介绍一些须知</p>
+<h3 id="编译调试"><a href="#编译调试" class="headerlink" title="编译调试"></a>编译调试</h3><p>debug流程是可以通过verbose开启，如下</p>
+<pre><code><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make V=<span class="number">1</span> bzImage -j12 <span class="number">2</span>&gt;&amp;<span class="number">1</span> | tee build.<span class="built_in">log</span></span><br></pre></td></tr></table></figure></code></pre>
+<p>更多见<code>make help</code></p>
+<h3 id="ld了解"><a href="#ld了解" class="headerlink" title="ld了解"></a>ld了解</h3><ul>
+<li>-m emulation模拟仿真器链接 -V 可以查看所以支持的仿真器</li>
+<li>-T 指定链接脚本</li>
+<li>–script=scriptfile 使用该脚本代替ld默认链接脚本</li>
+<li>-o output 指定链接结果</li>
+<li>–whole-archive file 将归档文件中的路径的库的符号都链接起来，后面需要跟–no-whole-archive代表界限</li>
+</ul>
+<h3 id="objcopy了解"><a href="#objcopy了解" class="headerlink" title="objcopy了解"></a>objcopy了解</h3><p>object file(.o文件) copy和转换工具，使用方式为<code>object input output</code></p>
+<ul>
+<li>-j section 只处理指定的section</li>
+<li>-R remove 移除指定的setion</li>
+<li>-O指定输出格式</li>
+<li>-S strip-all 没有debug section，因此没有symbol信息</li>
+</ul>
+<h2 id="驱动模块的构建"><a href="#驱动模块的构建" class="headerlink" title="驱动模块的构建"></a>驱动模块的构建</h2><p>驱动模块的构建做likely学习扩展部分见：<a href="https://sholck.top/archives/13.html#make%E7%BC%96%E8%AF%91%E6%A8%A1%E5%9D%97%E7%94%9F%E6%88%90-o">驱动模块的构建</a></p>
+<h2 id="vmlinux的构建"><a href="#vmlinux的构建" class="headerlink" title="vmlinux的构建"></a>vmlinux的构建</h2><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>在研究模块初始化过程中，发现<code>__initcall__kmod_trace__397_9768_tracer_init_tracefs5</code>所在的section在<code>kernel/trace/trace.o</code>和vmlinux中是不同的<br>section从.initcall5.init变动到.init.data，因此确定在object file整合到vmlinux时发生了section的整合</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">➜  linux git:(master) ✗ objdump -t kernel/trace/trace.o | grep -n <span class="string">&quot;tracer_init_tracefs&quot;</span></span><br><span class="line"><span class="number">120</span>:<span class="number">0000000000000000</span> l       .initcall5.init    <span class="number">0000000000000000</span> __initcall__kmod_trace__397_9768_tracer_init_tracefs5</span><br><span class="line"><span class="number">121</span>:<span class="number">0000000000000581</span> l     F .init.text <span class="number">00000000000002b</span>4 tracer_init_tracefs</span><br><span class="line"><span class="number">426</span>:<span class="number">0000000000000010</span> l     O .discard.addressable       <span class="number">0000000000000008</span> __UNIQUE_ID___addressable_tracer_init_tracefs398</span><br><span class="line"></span><br><span class="line">➜  linux git:(master) ✗ objdump -t vmlinux | grep -n <span class="string">&quot;tracer_init_tracefs&quot;</span></span><br><span class="line"><span class="number">18786</span>:ffffffff82ebb734 l       .init.data       <span class="number">0000000000000000</span> __initcall__kmod_trace__397_9768_tracer_init_tracefs5</span><br><span class="line"><span class="number">18787</span>:ffffffff82d5e986 l     F .init.text       <span class="number">00000000000002b</span>4 tracer_init_tracefs</span><br></pre></td></tr></table></figure>
+
+<h3 id="vmlinux构建过程"><a href="#vmlinux构建过程" class="headerlink" title="vmlinux构建过程"></a>vmlinux构建过程</h3><p>Makefile研究编译构建vmlinux的规则，下面是一个总体的框架</p>
+<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line">flowchart LR</span><br><span class="line">    M<span class="function"><span class="title">akefile</span> --&gt;</span> K<span class="function"><span class="title">build</span>.include --&gt;</span>指明kbuild规则为build=scripts/Makefile.build</span><br><span class="line">    K<span class="function"><span class="title">build</span>.include --&gt;</span>定义编译规则函数</span><br><span class="line">    定义编译规则函数--&gt;newer-prereqss是否需要更新即依赖比目标新</span><br><span class="line">    定义编译规则函数--&gt;cmd_command获取</span><br><span class="line">    <span class="function"><span class="title">cmd_command</span>获取--&gt;</span>if_changed_dep</span><br><span class="line">    <span class="function"><span class="title">cmd_command</span>获取--&gt;</span>if_changed_rule</span><br><span class="line">    </span><br><span class="line">    M<span class="function"><span class="title">akefile</span> --&gt;</span> <span class="function"><span class="title">arch</span>/x86/Makefile --&gt;</span> <span class="function"><span class="title">head</span>-y --&gt;</span>需要首先链接到vmlinux非built-<span class="built_in">in</span>.a部分</span><br><span class="line">    </span><br><span class="line">    M<span class="function"><span class="title">akefile</span> --&gt;</span> K<span class="function"><span class="title">build</span>:arch/x86/kernel/Makefile --&gt;</span> extra-y是一些构建vmlinux部分非built-<span class="built_in">in</span>.a的部分</span><br><span class="line">    </span><br><span class="line">    M<span class="function"><span class="title">akefile</span> --&gt;</span>目标<span class="function"><span class="title">vmlinux</span>--&gt;</span><span class="function"><span class="title">vmlinux</span>.lds--&gt;</span>descend </span><br><span class="line">    目标<span class="function"><span class="title">vmlinux</span> --&gt;</span>KBUILD_VMLINUX_OBJS--&gt;descend </span><br><span class="line">    目标<span class="function"><span class="title">vmlinux</span> --&gt;</span>KBUILD_VMLINUX_LIBS--&gt;descend </span><br><span class="line">    <span class="function"><span class="title">descend</span>--&gt;</span>M<span class="function"><span class="title">akefile</span>.build--&gt;</span><span class="function"><span class="title">targets</span>-<span class="keyword">for</span>-builtin--&gt;</span>通过.<span class="function"><span class="title">lds</span>.S生成.lds --&gt;</span>控制section顺序</span><br></pre></td></tr></table></figure>
+
+<p>vmlinux的编译规则如下：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">vmlinux: scripts/link-vmlinux.sh autoksyms_recursive $(vmlinux-deps) FORCE</span><br><span class="line">        +$(call if_changed_dep,link-vmlinux) </span><br></pre></td></tr></table></figure>
+
+<p>重点是vmlinux-deps</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_OBJS) $(KBUILD_VMLINUX_LIBS)</span><br><span class="line">//主要分为三大块</span><br><span class="line"><span class="built_in">export</span> KBUILD_LDS          := arch/$(SRCARCH)/kernel/vmlinux.lds </span><br><span class="line"></span><br><span class="line">KBUILD_VMLINUX_OBJS := $(head-y) $(patsubst %/,%/built-in.a, $(core-y))</span><br><span class="line">KBUILD_VMLINUX_OBJS += $(addsuffix built-in.a, $(filter %/, $(libs-y)))</span><br><span class="line">KBUILD_VMLINUX_OBJS += $(patsubst %/, %/lib.a, $(filter %/, $(libs-y)))</span><br><span class="line">KBUILD_VMLINUX_OBJS += $(patsubst %/,%/built-in.a, $(drivers-y))</span><br><span class="line"></span><br><span class="line">KBUILD_VMLINUX_LIBS := $(filter-out %/, $(libs-y))</span><br><span class="line"></span><br><span class="line">//这三大块都依赖</span><br><span class="line">$(sort $(vmlinux-deps) $(subdir-modorder)): descend ;  依赖descend</span><br></pre></td></tr></table></figure>
+
+<h4 id="vmlinux-lds"><a href="#vmlinux-lds" class="headerlink" title="vmlinux.lds"></a>vmlinux.lds</h4><p>vmlinux.lds依赖descend，descend的行为调用scripts/Makefile.build去编译,默认目标为__build</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">__build: $(<span class="keyword">if</span> $(KBUILD_BUILTIN), $(targets-<span class="keyword">for</span>-builtin)) \</span><br><span class="line">         $(<span class="keyword">if</span> $(KBUILD_MODULES), $(targets-<span class="keyword">for</span>-modules)) \</span><br><span class="line">         $(subdir-ym) $(always-y)                                                                </span><br><span class="line">        @:</span><br><span class="line">endif</span><br></pre></td></tr></table></figure>
+
+<p>依赖为$(targets-for-builtin)，其实理解就是内建目标</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">targets-<span class="keyword">for</span>-builtin := $(extra-y) </span><br></pre></td></tr></table></figure>
+
+<p>通过arch/x86/Kbuild指定编译的arch/x86/kernel/Makefile中有如下</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">extra-y += vmlinux.lds</span><br><span class="line">CPPFLAGS_vmlinux.lds += -U$(UTS_MACHINE)</span><br></pre></td></tr></table></figure>
+
+<p>因此vmlinux.lds作为依赖先要满足，规则为</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"># <span class="function">Linker scripts <span class="title">preprocessor</span> <span class="params">(.lds.S -&gt; .lds)</span>    </span></span><br><span class="line"># ---------------------------------------------------------------------------    </span><br><span class="line">quiet_cmd_cpp_lds_S = LDS     $@</span><br><span class="line">      cmd_cpp_lds_S = $(CPP) $(cpp_flags) -P -U$(ARCH) \</span><br><span class="line">                             -D__ASSEMBLY__ -DLINKER_SCRIPT -o $@ $&lt;</span><br><span class="line">$(obj)/%.lds: $(src)/%.lds.S FORCE</span><br><span class="line">        $(call if_changed_dep,cpp_lds_S)  </span><br></pre></td></tr></table></figure>
+
+<p>关于<code>cpp_lds_S</code>和<code>cmd_cpp_lds_S</code>的关系，见<a href="https://www.kernel.org/doc/html/v5.18-rc3/kbuild/makefiles.html?highlight=vmlinux%20lds%20s#command-change-detection">cmd_<command></a><br>其实也可以从代码中看出来</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">cmd = @<span class="built_in">set</span> -e; $(echo-cmd) $($(quiet)redirect) $(cmd_$(<span class="number">1</span>)) </span><br><span class="line">echo-cmd = $(<span class="keyword">if</span> $($(quiet)cmd_$(<span class="number">1</span>)),\</span><br><span class="line">        echo &#x27;  $(call escsq,$($(quiet)cmd_$(1)))$(echo-why)&#x27;;)</span><br><span class="line">cmd是在函数中的，第一个参数为command，如果command不会空，就去执行cmd_command命令</span><br></pre></td></tr></table></figure>
+
+<p>如果存在依赖比目标新的情况(即$?)等，那么默认执行<code>$(cmd_and_fixdep)</code>命令</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">newer-prereqs = $(filter-out $(PHONY),$?)</span><br><span class="line"><span class="keyword">if</span>-changed-cond = $(newer-prereqs)$(cmd-check)$(check-FORCE)</span><br><span class="line">if_changed_dep = $(<span class="keyword">if</span> $(<span class="keyword">if</span>-changed-cond),$(cmd_and_fixdep),@:)</span><br><span class="line">如果vmlinux.lds不存在，那么就会执行$(cmd_and_fixdep)</span><br><span class="line">cmd_and_fixdep =</span><br><span class="line">    $(cmd);                                                              \</span><br><span class="line">    scripts/basic/fixdep $(depfile) $@ &#x27;$(make-cmd)&#x27; &gt; $(dot-target).cmd;\</span><br><span class="line">    rm -f $(depfile)</span><br></pre></td></tr></table></figure>
+
+<p>因此最后的执行命令为<code>cmd_cpp_lds_S</code>，实际展开为如下</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;gcc -E -Wp,-MMD,arch/x86/kernel/.vmlinux.lds.d  -nostdinc -I./arch/x86/include -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./arch/x86/include/generated/</span></span><br><span class="line"><span class="string">uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/compiler-version.h -include ./include/linux/kconfig.h -D__KERNEL__     -Ux86_64 -P -Ux86 -D__ASSEMBLY__ -DLINKER_SCRIPT -o arch/x86/kernel</span></span><br><span class="line"><span class="string">/vmlinux.lds arch/x86/kernel/vmlinux.lds.S&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="KBUILD-VMLINUX-OBJS"><a href="#KBUILD-VMLINUX-OBJS" class="headerlink" title="KBUILD_VMLINUX_OBJS"></a>KBUILD_VMLINUX_OBJS</h4><p>KBUILD_VMLINUX_OBJS为4次增加，下面将分4次结合<code>kbuild/makefiles.html</code>来分析</p>
+<figure class="highlight makefile"><table><tr><td class="code"><pre><span class="line">KBUILD_VMLINUX_OBJS := $(head-y) <span class="variable">$(<span class="built_in">patsubst</span> %/,%/built-in.a, $(core-y)</span>)</span><br><span class="line">KBUILD_VMLINUX_OBJS += <span class="variable">$(<span class="built_in">addsuffix</span> built-in.a, $(<span class="built_in">filter</span> %/, $(libs-y)</span>))</span><br><span class="line">KBUILD_VMLINUX_OBJS += <span class="variable">$(<span class="built_in">patsubst</span> %/, %/lib.a, $(<span class="built_in">filter</span> %/, $(libs-y)</span>))</span><br><span class="line">KBUILD_VMLINUX_OBJS += <span class="variable">$(<span class="built_in">patsubst</span> %/,%/built-in.a, $(drivers-y)</span>)</span><br></pre></td></tr></table></figure>
+
+<h5 id="part-1"><a href="#part-1" class="headerlink" title="part 1"></a>part 1</h5><p>第一部分<code>$(head-y) $(patsubst %/,%/built-in.a, $(core-y))</code>打印为如下</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">arch/x86/kernel/head_64.o arch/x86/kernel/head64.o arch/x86/kernel/ebda.o arch/x86/kernel/platform-quirks.o init/built-in.a usr/built-in.a arch/x86/built-in.a kernel/built-in.a certs/built-in.a mm/built-in.a fs/built-in.a ipc/built-in.a security/built-in.a crypto/built-in.a block/built-in.a<span class="string">&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>由两部分组成，head-y和built-in.a部分</p>
+<p>head-y在arch/x86/Makefile中有定义，是需要首先链接到vmlinux的部分</p>
+<figure class="highlight makefile"><table><tr><td class="code"><pre><span class="line">chead-y := arch/x86/kernel/head_<span class="variable">$(BITS)</span>.o</span><br><span class="line">head-y += arch/x86/kernel/head<span class="variable">$(BITS)</span>.o</span><br><span class="line">head-y += arch/x86/kernel/ebda.o</span><br><span class="line">head-y += arch/x86/kernel/platform-quirks.o</span><br></pre></td></tr></table></figure>
+<p>vmlinux-deps<br>built-in.a是啥？从打印信息来看，每个主目录下(obj-y或者obj-m(需要打开builtin))都有一个built-in.a，这是一个Kbuild编译$(obj-y)部分之后将目标文件路径打包后的，并且不带symbol,之后会通过链接脚本<code>scripts/link-vmlinux.sh</code>链接到vmlinux</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">➜  kernel git:(master) ✗ <span class="built_in">pwd</span></span><br><span class="line">/github/linux/kernel</span><br><span class="line">➜  kernel git:(master) ✗ file built-in.a </span><br><span class="line">built-in.a: thin archive with 1718579819 symbol entries</span><br></pre></td></tr></table></figure>
+
+<h5 id="part-2-amp-3"><a href="#part-2-amp-3" class="headerlink" title="part 2&amp;3"></a>part 2&amp;3</h5><p>第二部分<code> $(addsuffix built-in.a, $(filter %/, $(libs-y)))</code>和第三部分<code>KBUILD_VMLINUX_OBJS += $(patsubst %/, %/lib.a, $(filter %/, $(libs-y)))</code>打印为</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">lib/built-in.a arch/x86/lib/built-in.a</span><br><span class="line"> lib/lib.a  arch/x86/lib/lib.a</span><br></pre></td></tr></table></figure>
+
+<p>libs-y的组成如下,<a href="https://www.kernel.org/doc/html/v5.18-rc3/kbuild/makefiles.html?highlight=vmlinux%20lds%20s#library-file-goals-lib-y">官方doc介绍</a>，工具将libs-y下的目标打包为库lib.a，并将路径归档为built-in.a</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//Makefile</span></span><br><span class="line">libs-y          := lib/</span><br><span class="line"><span class="comment">//arch/x86/Makefile</span></span><br><span class="line">libs-y  += arch/x86/lib/</span><br></pre></td></tr></table></figure>
+
+<h5 id="part-4"><a href="#part-4" class="headerlink" title="part 4"></a>part 4</h5><p>第4部分<code>$(patsubst %/,%/built-in.a, $(drivers-y))</code>的打印为</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">drivers/built-in.a sound/built-in.a net/built-in.a virt/built-in.a arch/x86/pci/built-in.a arch/x86/power/built-in.a arch/x86/video/built-in.a<span class="string">&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>这是一些驱动部分</p>
+<h4 id="KBUILD-VMLINUX-LIBS"><a href="#KBUILD-VMLINUX-LIBS" class="headerlink" title="KBUILD_VMLINUX_LIBS"></a>KBUILD_VMLINUX_LIBS</h4><p>KBUILD_VMLINUX_LIBS := $(filter-out %/, $(libs-y))<br>因为<code>libs-y</code>只有<code>lib/</code>和<code>arch/x86/lib/</code>两部分，因此<code>KBUILD_VMLINUX_LIBS</code>为空</p>
+<h4 id="链接依赖总结"><a href="#链接依赖总结" class="headerlink" title="链接依赖总结"></a>链接依赖总结</h4><p>在链接脚本链接前，需要以下依赖</p>
+<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line">graph LR</span><br><span class="line">    依赖--&gt; vmlinux-deps</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="title">vmlinux</span>-deps--&gt;</span>非<span class="function"><span class="title">built</span>-<span class="built_in">in</span>--&gt;</span>vmlinux.lds</span><br><span class="line">    非<span class="function"><span class="title">built</span>-<span class="built_in">in</span>--&gt;</span>head-y</span><br><span class="line">    <span class="function"><span class="title">vmlinux</span>-deps--&gt;</span>built-<span class="built_in">in</span></span><br><span class="line">  </span><br><span class="line">    <span class="function"><span class="title">built</span>-<span class="built_in">in</span>.a--&gt;</span>core-y</span><br><span class="line">    <span class="function"><span class="title">built</span>-<span class="built_in">in</span>.a--&gt;</span>drivers-y</span><br><span class="line">    <span class="function"><span class="title">built</span>-<span class="built_in">in</span>.a--&gt;</span>libs-y</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="title">built</span>-<span class="built_in">in</span>--&gt;</span>built-<span class="built_in">in</span>.a</span><br><span class="line">    <span class="function"><span class="title">built</span>-<span class="built_in">in</span>--&gt;</span><span class="function"><span class="title">lib</span>.a--&gt;</span>libs-y</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<p>整体依赖如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">arch/x86/kernel/vmlinux.lds arch/x86/kernel/head_64.o arch/x86/kernel/head64.o arch/x86/kernel/ebda.o arch/x86/kernel/platform-quirks.o init/built-in.a usr/built-in.a arch/x86/built-in.a kernel/built-in.a certs/built-in.a mm/built-in.a fs/built-in.a ipc/built-in.a security/built-in.a crypto/built-in.a block/built-in.a lib/built-in.a arch/x86/lib/built-in.a  lib/lib.a  arch/x86/lib/lib.a drivers/built-in.a sound/built-in.a net/built-in.a virt/built-in.a arch/x86/pci/built-in.a arch/x86/power/built-in.a arch/x86/video/built-in.a <span class="string">&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="脚本链接vmlinux"><a href="#脚本链接vmlinux" class="headerlink" title="脚本链接vmlinux"></a>脚本链接vmlinux</h4><p><code>link-vmlinux.sh</code>描述链接过程为，其实lib/lib.a已经合并到KBUILD_VMLINUX_OBJS</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta"># vmlinux    </span></span><br><span class="line">#   ^    </span><br><span class="line">#   |    </span><br><span class="line">#   +--&lt; $(KBUILD_VMLINUX_OBJS)    </span><br><span class="line">#   |    +--&lt; init/built-in.a drivers/built-in.a mm/built-in.a + more    </span><br><span class="line">#   |    </span><br><span class="line">#   +--&lt; $(KBUILD_VMLINUX_LIBS)    </span><br><span class="line">#   |    +--&lt; lib/lib.a + more    </span><br><span class="line">#   |    </span><br><span class="line">#   +-&lt; $&#123;kallsymso&#125; (see description in KALLSYMS section)</span><br></pre></td></tr></table></figure>
+
+<p>最后链接执行的语句为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">cmd_link-vmlinux =                                                 \</span><br><span class="line">        $(CONFIG_SHELL) $&lt; <span class="string">&quot;$(LD)&quot;</span> <span class="string">&quot;$(KBUILD_LDFLAGS)&quot;</span> <span class="string">&quot;$(LDFLAGS_vmlinux)&quot;</span>;    \     </span><br><span class="line">        $(<span class="keyword">if</span> $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+
+<p>实际扩展为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">sh scripts/link-vmlinux.sh <span class="string">&quot;ld&quot;</span> <span class="string">&quot; -m elf_x86_64&quot;</span> <span class="string">&quot;--emit-relocs --discard-none -z max-page-size=0x200000 --build-id=sha1 --orphan-handling=warn&quot;</span>;  <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>为了对链接有更容易的理解，需要对ld有更多的一点了解，ld是一个GNU链接器，一些一定需要知道的参数如下：</p>
+<h5 id="脚本链接过程"><a href="#脚本链接过程" class="headerlink" title="脚本链接过程"></a>脚本链接过程</h5><p>脚本链接过程如下：</p>
+<p>0.1通过<code>modpost_link</code>使用ld默认链接生成vmlinux.o所以此时section是没有进过处理的<br>0.2通过<code>objtool_link</code>将vmlinux.o中的模块symbol导出生成vmlinux.symvers, 见<code>scripts/mod/modpost.c</code></p>
+<p>1.1先<code>vmlinux_link</code>链接通过<code>ld</code>链接归档生成.tmp_vmlinux.kallsyms1，此时包含了所有的section 和section，(但是__kallsyms是空的,可能指没有kallsyms_offsets之类的symbol)<br>1.2通过<code>kallsyms</code>生成.tmp_vmlinux.kallsyms1.S，这是一个包含symbol的汇编源代码，可以查看文件<code>scripts/kallsyms.c</code><br>    <figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">nm -n .tmp_vmlinux.kallsyms1 | scripts/kallsyms --all-symbols --absolute-percpu --base-relative &gt;.tmp_vmlinux.kallsyms1.S</span><br></pre></td></tr></table></figure><br>1.3 gcc通过-I选项指定头文件路径进行编译生成.tmp_vmlinux.kallsyms1.o，此时应该包含正确的kallsyms类symbol</p>
+<p>2.1<code>vmlinux_link</code>链接通过<code>ld</code>链接.tmp_vmlinux.kallsyms1.o和归档为.tmp_vmlinux.kallsyms2,但由于新增加部分，导致地址发生了偏移<br>2.2通过<code>kallsyms</code>生成.tmp_vmlinux.kallsyms1.S，新的包含symbol的汇编源代码<br>2.3 gcc通过-I选项指定头文件路径进行编译生成.tmp_vmlinux.kallsyms2.o</p>
+<p>3.1 vmlinux_link<code>链接通过</code>ld`链接.tmp_vmlinux.kallsyms2.o和归档为vmlinux</p>
+<p>4.<code>mksysmap vmlinux System.map</code>通过<code>nm</code>提取符号表为System.map</p>
+<p>5.<code>sorttable vmlinux</code>进行符号表排序，见<code>scripts/sorttable.c</code></p>
+<p>6.符号表检验机制：将<code>.tmp_vmlinux.kallsyms2</code>生成的符号表<code>.tmp_System.map</code>和System.map做校验</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">    </span><br><span class="line">    scripts/link-vmlinux<span class="selector-class">.sh</span> --&gt; <span class="number">1</span>.ld默认链接生成vmlinux<span class="selector-class">.o</span> --&gt;<span class="number">2</span>.提取模块symbol生成vmlinux.symvers</span><br><span class="line">    <span class="number">1</span>.ld默认链接生成vmlinux<span class="selector-class">.o</span> --&gt;<span class="number">3</span>.提取.modinfo到modules<span class="selector-class">.builtin</span>.modinfo</span><br><span class="line">    </span><br><span class="line">     scripts/link-vmlinux<span class="selector-class">.sh</span> --&gt; <span class="number">4</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms1</span> --&gt;<span class="number">5</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms1</span>.S</span><br><span class="line">    <span class="number">5</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms1</span><span class="selector-class">.S</span> --&gt;<span class="number">6</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms1</span>.o</span><br><span class="line">    <span class="number">6</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms1</span><span class="selector-class">.o</span> --&gt;<span class="number">7</span>.生成<span class="selector-class">.tmp_vmlinux</span>.kallsyms2</span><br><span class="line">    <span class="number">7</span>.生成<span class="selector-class">.tmp_vmlinux</span>.kallsyms2--&gt;<span class="number">8</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms2</span>.S</span><br><span class="line">    <span class="number">8</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms2</span>.S--&gt;<span class="number">9</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms2</span>.o</span><br><span class="line">    <span class="number">9</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms2</span><span class="selector-class">.o</span> --&gt;<span class="number">10</span>.生成vmlinux --&gt;<span class="number">11</span>.生成System.map</span><br><span class="line">    <span class="number">7</span>.生成<span class="selector-class">.tmp_vmlinux</span><span class="selector-class">.kallsyms2</span> --&gt;<span class="number">12</span>.生成tmp_System.map</span><br></pre></td></tr></table></figure>
+
+<p>从链接脚本脚本的打印来看：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">➜  linux git:(master) ✗ make V=<span class="number">1</span> bzImage -j12 <span class="number">2</span>&gt;&amp;<span class="number">1</span> | tee build.<span class="built_in">log</span></span><br><span class="line"><span class="comment">//1.先链接生成vmlinux.o，因为是按照ld默认规则生成，故没有部分section的消失，即section的整合</span></span><br><span class="line">ld -m elf_x86_64 -r -o vmlinux.o --whole-archive arch/x86/kernel/head_64.o arch/x86/kernel/head64.o arch/x86/kernel/ebda.o arch/x86/kernel/platform-quirks.o init/built-in.a usr/built-in.a arch/x86/built-in.a kernel/built-in.a certs/built-in.a mm/built-in.a fs/built-in.a ipc/built-in.a security/built-in.a crypto/built-in.a block/built-in.a lib/built-in.a arch/x86/lib/built-in.a lib/lib.a arch/x86/lib/lib.a drivers/built-in.a sound/built-in.a net/built-in.a virt/built-in.a arch/x86/pci/built-in.a arch/x86/power/built-in.a arch/x86/video/built-in.a --no-whole-archive --start-group --end-group</span><br><span class="line"></span><br><span class="line"><span class="comment">//此时vmlinux.o的section还没有整合</span></span><br><span class="line">➜  linux git:(master) ✗ objdump -t vmlinux.o  | grep -n <span class="string">&quot;tracer_init_tracefs&quot;</span></span><br><span class="line"><span class="number">32887</span>:<span class="number">0000000000000018</span> l       .initcall5.init  <span class="number">0000000000000000</span> __initcall__kmod_trace__397_9768_tracer_init_tracefs5</span><br><span class="line"><span class="number">32888</span>:<span class="number">000000000002e986</span> l     F .init.text       <span class="number">00000000000002b</span>4 tracer_init_tracefs</span><br><span class="line"><span class="number">33178</span>:<span class="number">0000000000004</span>c28 l     O .discard.addressable     <span class="number">0000000000000008</span> __UNIQUE_ID___addressable_tracer_init_tracefs398</span><br><span class="line"></span><br><span class="line"><span class="comment">//2，先链接生成.tmp_vmlinux.kallsyms1</span></span><br><span class="line">ld -m elf_x86_64 --emit-relocs --discard-none -z max-page-size=<span class="number">0x200000</span> --build-id=sha1 --orphan-handling=warn --script=./arch/x86/kernel/vmlinux.lds --strip-debug -o .tmp_vmlinux.kallsyms1 --whole-archive arch/x86/kernel/head_64.o arch/x86/kernel/head64.o arch/x86/kernel/ebda.o arch/x86/kernel/platform-quirks.o init/built-in.a usr/built-in.a arch/x86/built-in.a kernel/built-in.a certs/built-in.a mm/built-in.a fs/built-in.a ipc/built-in.a security/built-in.a crypto/built-in.a block/built-in.a lib/built-in.a arch/x86/lib/built-in.a lib/lib.a arch/x86/lib/lib.a drivers/built-in.a sound/built-in.a net/built-in.a virt/built-in.a arch/x86/pci/built-in.a arch/x86/power/built-in.a arch/x86/video/built-in.a --no-whole-archive --start-group --end-group</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">//此时.tmp_vmlinux.kallsyms1的section已经整合完毕</span></span><br><span class="line">➜  linux git:(master) ✗ objdump -t .tmp_vmlinux.kallsyms1  | grep -n <span class="string">&quot;tracer_init_tracefs&quot;</span> </span><br><span class="line"><span class="number">18778</span>:ffffffff82cbb734 l       .init.data       <span class="number">0000000000000000</span> __initcall__kmod_trace__397_9768_tracer_init_tracefs5  &gt;&gt;.init.data section</span><br><span class="line"><span class="number">18779</span>:ffffffff82b5e986 l     F .init.text       <span class="number">00000000000002b</span>4 tracer_init_tracefs</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//3.链接生成.tmp_vmlinux.kallsyms2</span></span><br><span class="line">ld -m elf_x86_64 --emit-relocs --discard-none -z max-page-size=<span class="number">0x200000</span> --build-id=sha1 --orphan-handling=warn --script=./arch/x86/kernel/vmlinux.lds --strip-debug -o .tmp_vmlinux.kallsyms2 --whole-archive arch/x86/kernel/head_64.o arch/x86/kernel/head64.o arch/x86/kernel/ebda.o arch/x86/kernel/platform-quirks.o init/built-in.a usr/built-in.a arch/x86/built-in.a kernel/built-in.a certs/built-in.a mm/built-in.a fs/built-in.a ipc/built-in.a security/built-in.a crypto/built-in.a block/built-in.a lib/built-in.a arch/x86/lib/built-in.a lib/lib.a arch/x86/lib/lib.a drivers/built-in.a sound/built-in.a net/built-in.a virt/built-in.a arch/x86/pci/built-in.a arch/x86/power/built-in.a arch/x86/video/built-in.a --no-whole-archive --start-group --end-group .tmp_vmlinux.kallsyms1.o</span><br><span class="line"></span><br><span class="line"><span class="comment">//4. 链接生成 vmlinux</span></span><br><span class="line">ld -m elf_x86_64 --emit-relocs --discard-none -z max-page-size=<span class="number">0x200000</span> --build-id=sha1 --orphan-handling=warn --script=./arch/x86/kernel/vmlinux.lds -o vmlinux --whole-archive arch/x86/kernel/head_64.o arch/x86/kernel/head64.o arch/x86/kernel/ebda.o arch/x86/kernel/platform-quirks.o init/built-in.a usr/built-in.a arch/x86/built-in.a kernel/built-in.a certs/built-in.a mm/built-in.a fs/built-in.a ipc/built-in.a security/built-in.a crypto/built-in.a block/built-in.a lib/built-in.a arch/x86/lib/built-in.a lib/lib.a arch/x86/lib/lib.a drivers/built-in.a sound/built-in.a net/built-in.a virt/built-in.a arch/x86/pci/built-in.a arch/x86/power/built-in.a arch/x86/video/built-in.a --no-whole-archive --start-group --end-group .tmp_vmlinux.kallsyms2.o</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="bzImage的构建"><a href="#bzImage的构建" class="headerlink" title="bzImage的构建"></a>bzImage的构建</h2><p>到此时，vmlinux已经构建成功，开始bzImage构建<br>bzImage构建参考<a href="https://www.kernel.org/doc/html/v5.18-rc3/kbuild/makefiles.html?highlight=vmlinux%20lds%20s#architecture-specific-boot-images">官方boot image构建</a></p>
+<h3 id="bzImage的流程构建框架"><a href="#bzImage的流程构建框架" class="headerlink" title="bzImage的流程构建框架"></a>bzImage的流程构建框架</h3><p>bzImage的流程构建框架如下：</p>
+<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">    <span class="function"><span class="title">setup</span>.bin--&gt;</span>bzImage</span><br><span class="line">    <span class="function"><span class="title">vmlinux</span>.bin --&gt;</span>bzImage</span><br><span class="line">    <span class="function"><span class="title">zoffset</span>.h --&gt;</span>bzImage</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">setup</span>.elf--&gt;</span>setup.bin</span><br><span class="line">    <span class="function"><span class="title">setup</span>.ld --&gt;</span>setup.elf</span><br><span class="line">    <span class="function"><span class="title">header</span>.o --&gt;</span>setup.elf</span><br><span class="line">    <span class="function"><span class="title">header</span>.S --&gt;</span>header.o</span><br><span class="line">    <span class="function"><span class="title">version</span>.o --&gt;</span>setup.elf</span><br><span class="line">    <span class="function"><span class="title">version</span>.c --&gt;</span>version.o</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="title">compressed</span>/vmlinux.lds--&gt;</span> <span class="function"><span class="title">compressed</span>/vmlinux --&gt;</span>vmlinux.bin</span><br><span class="line">    <span class="function"><span class="title">compressed</span>/vmlinux --&gt;</span>zoffset.h</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="title">compressed</span>/vmlinux-bin.gz--&gt;</span><span class="function"><span class="title">piggy</span>.S --&gt;</span> <span class="function"><span class="title">piggo</span>.o --&gt;</span>compressed/vmlinux</span><br><span class="line">    <span class="function"><span class="title">kasler</span>.o --&gt;</span>compressed/vmlinux</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="title">compressed</span>/vmlinux.bin --&gt;</span>compressed/vmlinux-bin.gz</span><br><span class="line">    <span class="function"><span class="title">compressed</span>/vmlinux.relocs --&gt;</span>compressed/vmlinux-bin.gz</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="title">vmlinux</span> --&gt;</span> compressed/vmlinux.bin</span><br><span class="line">    </span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<h3 id="bzImage构建时的文件框架"><a href="#bzImage构建时的文件框架" class="headerlink" title="bzImage构建时的文件框架"></a>bzImage构建时的文件框架</h3><p>bzImage构建时的Makefile框架是一个动态的包含和调用，如下</p>
+<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line">graph LR</span><br><span class="line"></span><br><span class="line">    arch/x86/Makefile --&gt;scripts/<span class="module-access"><span class="module"><span class="identifier">Makefile</span>.</span></span>build</span><br><span class="line">    scripts/<span class="module-access"><span class="module"><span class="identifier">Makefile</span>.</span></span>build --&gt;scripts/<span class="module-access"><span class="module"><span class="identifier">Kbuild</span>.</span></span><span class="keyword">include</span></span><br><span class="line">    scripts/<span class="module-access"><span class="module"><span class="identifier">Makefile</span>.</span></span>build --&gt;scripts/<span class="module-access"><span class="module"><span class="identifier">Makefile</span>.</span></span>lib</span><br><span class="line">    scripts/<span class="module-access"><span class="module"><span class="identifier">Makefile</span>.</span></span>build --&gt;<span class="number">1.</span>arch/x86/boot/Makefile --&gt;scripts/<span class="module-access"><span class="module"><span class="identifier">Makefile</span>.</span></span>build</span><br><span class="line">    scripts/<span class="module-access"><span class="module"><span class="identifier">Makefile</span>.</span></span>build --&gt;<span class="number">2.</span>arch/x86/boot/compressed/Makefile</span><br></pre></td></tr></table></figure>
+
+<h3 id="bzImage的构建过程"><a href="#bzImage的构建过程" class="headerlink" title="bzImage的构建过程"></a>bzImage的构建过程</h3><p>依赖规则为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/x86/Makefile</span></span><br><span class="line">bzImage: vmlinux</span><br><span class="line">ifeq ($(CONFIG_X86_DECODER_SELFTEST),y)</span><br><span class="line">        $(Q)$(MAKE) $(build)=arch/x86/tools posttest                                                        </span><br><span class="line">endif</span><br><span class="line">        $(Q)$(MAKE) $(build)=$(boot) $(KBUILD_IMAGE)                                                             </span><br><span class="line">        $(Q)mkdir -p $(objtree)/arch/$(UTS_MACHINE)/boot                                      </span><br><span class="line">        $(Q)ln -fsn ../../x86/boot/bzImage $(objtree)/arch/$(UTS_MACHINE)/boot/$@  </span><br></pre></td></tr></table></figure>
+
+<p>扩展为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make -f ./scripts/Makefile.build obj=arch/x86/boot arch/x86/boot/bzImage</span><br></pre></td></tr></table></figure>
+
+<p>而scripts/Makefile.build此时又包含了<code>arch/x86/boot/Makefile</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">kbuild-dir := $(<span class="keyword">if</span> $(filter /%,$(src)),$(src),$(srctree)/$(src))</span><br><span class="line">include $(<span class="keyword">or</span> $(wildcard $(kbuild-dir)/Kbuild),$(kbuild-dir)/Makefile) &gt;&gt;include 了arch/x86/boot/Makefile</span><br></pre></td></tr></table></figure>
+
+<p>定义了bzImage的依赖和cmd行为</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">quiet_cmd_image = BUILD   $@</span><br><span class="line">silent_redirect_image = &gt;/dev/null</span><br><span class="line">cmd_image = $(obj)/tools/build $(obj)/setup.bin $(obj)/vmlinux.bin \</span><br><span class="line">                               $(obj)/zoffset.h $@ $($(quiet)redirect_image)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">$(obj)/bzImage: $(obj)/setup.bin $(obj)/vmlinux.bin $(obj)/tools/build FORCE</span><br><span class="line">        $(call if_changed,image)    </span><br><span class="line">        @$(kecho) &#x27;Kernel: $@ is ready&#x27; &#x27; (#&#x27;`cat .version`&#x27;)&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>bzImage的主要构成为为setup.bin和vmlinux.bin，由arch/x86/boot/tools/build构建</p>
+<h4 id="setup-bin"><a href="#setup-bin" class="headerlink" title="setup.bin"></a>setup.bin</h4><p>setup.bin用来引导探测内存等的，依赖setup.elf</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">OBJCOPYFLAGS_setup.bin  := -O binary</span><br><span class="line">$(obj)/setup.bin: $(obj)/setup.elf FORCE</span><br><span class="line">        $(call if_changed,objcopy)  </span><br></pre></td></tr></table></figure>
+
+<p>setup.elf是由arch/x86/boot下的header.o等通过ld链接而来</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">$(obj)/setup.elf: $(src)/setup.ld $(SETUP_OBJS) FORCE</span><br><span class="line">        $(call if_changed,ld)</span><br></pre></td></tr></table></figure>
+
+<p>setup.ld是作为链接脚本，指定了内核入口点等重要的内核启动信息<br>而setup.elf有一些附加信息对内核没有，所以才二进制导入到setup.bin</p>
+<h4 id="vmlinux-bin"><a href="#vmlinux-bin" class="headerlink" title="vmlinux.bin"></a>vmlinux.bin</h4><p>vmlinux.bin的构建在<code>arch/x86/boot/compressed/Makefile</code>中描述如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta"># create a compressed vmlinux image from the original vmlinux</span></span><br><span class="line">#</span><br><span class="line"><span class="meta"># vmlinuz is:</span></span><br><span class="line"><span class="meta">#       decompression code (*.o)</span></span><br><span class="line"><span class="meta">#       asm globals (piggy.S), including:</span></span><br><span class="line"><span class="meta">#               vmlinux.bin.(gz|bz2|lzma|...)</span></span><br><span class="line">#</span><br><span class="line"><span class="meta"># vmlinux.bin is:</span></span><br><span class="line"><span class="meta">#       vmlinux stripped of debugging and comments  &gt;&gt;vmlinux去掉.comments 和 .debuggingXXX 等section后</span></span><br><span class="line"><span class="meta"># vmlinux.bin.all is:</span></span><br><span class="line"><span class="meta">#       vmlinux.bin + vmlinux.relocs  </span></span><br><span class="line"><span class="meta"># vmlinux.bin.(gz|bz2|lzma|...) is:</span></span><br><span class="line">#       (see scripts/Makefile.lib size_append)                                                                                                    </span><br><span class="line"><span class="meta">#       compressed vmlinux.bin.all + u32 size of vmlinux.bin.all</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>vmlinux.bin的依赖为一个被压缩过后的vmlinux</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">OBJCOPYFLAGS_vmlinux.bin := -O binary -R .note -R .comment -S</span><br><span class="line">$(obj)/vmlinux.bin: $(obj)/compressed/vmlinux FORCE</span><br><span class="line">        $(call if_changed,objcopy)  </span><br></pre></td></tr></table></figure>
+
+<p><code>compressed/vmlinux</code>将除了.note和.comment以外的section部分以二进制方式导入到vmlinux.bin中</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">➜  boot git:(master) ✗ file vmlinux.bin</span><br><span class="line">vmlinux.bin: data</span><br><span class="line">➜  boot git:(master) ✗ file compressed/vmlinux</span><br><span class="line">compressed/vmlinux: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), statically linked, not stripped</span><br><span class="line"></span><br><span class="line">➜  boot git:(master) ✗ objdump -h compressed/vmlinux</span><br><span class="line"></span><br><span class="line">compressed/vmlinux：     文件格式 elf64-x86-64</span><br><span class="line"></span><br><span class="line">节：</span><br><span class="line">Idx Name          Size      VMA               LMA               File off  Algn</span><br><span class="line">  0 .head.text    0000040d  0000000000000000  0000000000000000  00200000  2**4</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br><span class="line">  1 .rodata..compressed 009b6c04  000000000000040d  000000000000040d  0020040d  2**0</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  2 .text         0000cbdf  00000000009b7020  00000000009b7020  00bb7020  2**4</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br><span class="line">  3 .rodata       00001d26  00000000009c3c00  00000000009c3c00  00bc3c00  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  4 .data         000002d4  00000000009c5930  00000000009c5930  00bc5930  2**4</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  5 .bss          00018070  00000000009c5c40  00000000009c5c40  00bc5c04  2**5</span><br><span class="line">                  ALLOC</span><br><span class="line">  6 .pgtable      00012000  00000000009de000  00000000009de000  00bc5c04  2**12</span><br><span class="line">                  ALLOC</span><br><span class="line">  7 .comment      00000011  0000000000000000  0000000000000000  00bc5c04  2**0</span><br><span class="line">                  CONTENTS, READONLY</span><br><span class="line">  8 .got.plt      00000018  00000000009f0000  00000000009f0000  00bc5c18  2**3</span><br><span class="line">                  CONTENTS</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><code>compressed/vmlinux</code>的依赖如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">$(obj)/compressed/vmlinux: FORCE</span><br><span class="line">    $(Q)$(MAKE) $(build)=$(obj)/compressed $@ </span><br></pre></td></tr></table></figure>
+
+<p>展开为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make -f ./scripts/Makefile.build obj=arch/x86/boot/compressed arch/x86/boot/compressed/vmlinux</span><br></pre></td></tr></table></figure>
+
+<p>而此时include的东西根据obj的不同也开始不同，现在相当于变成了<code>include arch/x86/boot/compressed/Makefile</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">kbuild-dir := $(<span class="keyword">if</span> $(filter /%,$(src)),$(src),$(srctree)/$(src))</span><br><span class="line">include $(<span class="keyword">or</span> $(wildcard $(kbuild-dir)/Kbuild),$(kbuild-dir)/Makefile) </span><br></pre></td></tr></table></figure>
+
+<p>因此，<code>compressed/vmlinux</code>的依赖变为如下：之后将这些链接起来，链接脚本为<code>compressed/vmlinux.lds</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">$(obj)/vmlinux: $(vmlinux-objs-y) $(efi-obj-y) FORCE</span><br><span class="line">        $(call if_changed,ld) </span><br></pre></td></tr></table></figure>
+
+<p>其中包括 <code>compressed/vmlinux.lds</code>和其他的一些库,比如piggy.o和进行内核地址随机化的kaslr.o, piggy.o需要通过如下生成</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">quiet_cmd_mkpiggy = MKPIGGY $@</span><br><span class="line">      cmd_mkpiggy = $(obj)/mkpiggy $&lt; &gt; $@</span><br><span class="line">targets += piggy.S</span><br><span class="line">$(obj)/piggy.S: $(obj)/vmlinux.bin.$(suffix-y) $(obj)/mkpiggy FORCE</span><br><span class="line">        $(call if_changed,mkpiggy) </span><br></pre></td></tr></table></figure>
+
+<p>通过mkpiggy工具处理<code>compressed/vmlinux.bin.gz</code>生成pigggy.S，<code>compressed/vmlinux.bin.gz</code>的依赖如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">vmlinux.bin.all-y := $(obj)/vmlinux.bin</span><br><span class="line">vmlinux.bin.all-$(CONFIG_X86_NEED_RELOCS) += $(obj)/vmlinux.relocs</span><br><span class="line">$(obj)/vmlinux.bin.gz: $(vmlinux.bin.all-y) FORCE</span><br><span class="line">        $(call if_changed,gzip)</span><br></pre></td></tr></table></figure>
+
+<p>在.config中CONFIG_X86_NEED_RELOCS为y，因此需要两个依赖<code>compressed/vmlinux.bin</code>和<code>compressed/vmlinux.relocs</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">OBJCOPYFLAGS_vmlinux.bin :=  -R .comment -S</span><br><span class="line">$(obj)/vmlinux.bin: vmlinux FORCE</span><br><span class="line">        $(call if_changed,objcopy)</span><br><span class="line"></span><br><span class="line"><span class="comment">//objcopy  -R .comment -S vmlinux arch/x86/boot/compressed/vmlinux.bin</span></span><br></pre></td></tr></table></figure>
+
+<p>如上，<code>compressed/vmlinux.bin</code>是vmlinux去掉.comment section和 strip-all(没有 debug secion部分)的二进制数<br>如下，<code>compressed/vmlinux.relocs</code>是通过relocs处理vmlinux生成的</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">CMD_RELOCS = arch/x86/tools/relocs</span><br><span class="line">quiet_cmd_relocs = RELOCS  $@</span><br><span class="line">      cmd_relocs = $(CMD_RELOCS) $&lt; &gt; $@;$(CMD_RELOCS) --<span class="built_in">abs</span>-relocs $&lt;</span><br><span class="line">$(obj)/vmlinux.relocs: vmlinux FORCE</span><br><span class="line">        $(call if_changed,relocs)</span><br><span class="line">vmlinux.bin.all-y := $(obj)/vmlinux.bin</span><br><span class="line">vmlinux.bin.all-$(CONFIG_X86_NEED_RELOCS) += $(obj)/vmlinux.relocs</span><br><span class="line"></span><br><span class="line"><span class="comment">//arch/x86/tools/relocs vmlinux &gt; arch/x86/boot/compressed/vmlinux.relocs;arch/x86/tools/relocs --abs-relocs vmlinux</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>Kbuild</tag>
+        <tag>Makefile</tag>
+        <tag>ld</tag>
+        <tag>objcopy</tag>
+        <tag>内核编译</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>crash库的开源提交</title>
     <url>/archives/14.html</url>
     <content><![CDATA[<h1 id="crash库的开源提交"><a href="#crash库的开源提交" class="headerlink" title="crash库的开源提交"></a>crash库的开源提交</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在学习crash分析kernel 5.17.0+ dump时，遇到一些问题</p>
@@ -582,6 +776,92 @@
       </tags>
   </entry>
   <entry>
+    <title>linux内核开发学习手册-内核许可证</title>
+    <url>/archives/10.html</url>
+    <content><![CDATA[<h1 id="linux内核开发学习手册-内核许可证"><a href="#linux内核开发学习手册-内核许可证" class="headerlink" title="linux内核开发学习手册-内核许可证"></a>linux内核开发学习手册-内核许可证</h1><p>原文见：内核开发文档-Linux kernel licensing rules(Linux内核许可规则)</p>
+<h2 id="内核通用许可证"><a href="#内核通用许可证" class="headerlink" title="内核通用许可证"></a>内核通用许可证</h2><ul>
+<li>linux内核虽然是开源的，但是为了避免开发者的心血被不良厂商赚取利益等和保护开源环境，因此是有基于GPL-2.0() 的通用公共许可证作为法律保护的，具体的描述见<font color=#2196F3 >COPYING</font>文件。</li>
+</ul>
+<ul>
+<li>所有的内核源文件都需要标志许可证，而且这个许可证是可以与GPL-2.0兼容的，但是UAPI是作为例外的，因为是非内核的软件如果与内核通信，需要包含此头文件，但是我们不能要求该通信软件也受此许可证限制，因此此类特殊的例外许可描述也会被记录。</li>
+</ul>
+<a id="more"></a>
+
+<ul>
+<li>为了便于源文件的统一标识许可证,因此使用可解析的SPDX(Software Package Data Exchange)，当我们使用<code>./scripts/checkpatch.pl</code>来检查文件时，同时也会检查SPDX</li>
+</ul>
+<h2 id="内核许可规则"><a href="#内核许可规则" class="headerlink" title="内核许可规则"></a>内核许可规则</h2><p><a href="https://spdx.org/licenses/">内核许可列表</a>是官方列表，描述了可用的SPDX条目和已经不再使用的。比如<code>GPL-2.0-only</code>是比<code>GPL-2.0</code>更加规范的，目前广泛使用的的许可证见<code>LICENSES/preferred/</code></p>
+<h3 id="描述规则"><a href="#描述规则" class="headerlink" title="描述规则"></a>描述规则</h3><p>不同类型的文件有不同的描述规则。更多见内核开发文档</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">C source: <span class="regexp">//</span> SPDX-License-Identifier: &lt;SPDX License Expression&gt;</span><br><span class="line">C header: <span class="regexp">/* SPDX-License-Identifier: &lt;SPDX License Expression&gt; */</span></span><br><span class="line">scripts:  <span class="comment"># SPDX-License-Identifier: &lt;SPDX License Expression&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="SPDX声明位置"><a href="#SPDX声明位置" class="headerlink" title="SPDX声明位置"></a>SPDX声明位置</h3><p>应该放在第一行，虽然说有<code>#!PATH_TO_INTERPRETER</code>的时候在第二行，但是目前内核没有使用<code>#!PATH_TO_INTERPRETER</code>的脚本</p>
+<h3 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h3><p>通用语法如下</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">//</span> SPDX-License-Identifier: GPL-<span class="number">2.0</span>-only </span><br></pre></td></tr></table></figure>
+
+<p>当UAPI需要使用例外许可时，使用 <code>WITH</code>，例外许可证见<code>LICENSES/exceptions&lt;/font&gt;</code><br>`</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */</span></span><br></pre></td></tr></table></figure>
+
+<p>目前出了UAPI的例外，内核<font color=#2196F3 >LICENSES/exceptions</font>声明的例外还有GCC-exception-2.0，作为GCC链接例外，允许任意的二进制文件能够和该例外声明的文件编译的版本文件链接，使用基本都是arch/sh/lib/的汇编文件中</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">/* SPDX-License-Identifier: GPL-<span class="number">2.0</span>+ <span class="keyword">WITH</span> GCC-<span class="keyword">exception</span>-<span class="number">2.0</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="双重许可证"><a href="#双重许可证" class="headerlink" title="双重许可证"></a>双重许可证</h3><p>文件有双重许可，但是只有一个会被使用，多见dts文件</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">//</span> SPDX-License-Identifier: (GPL-<span class="number">2.0</span> WITH Linux-syscall-note) OR MIT</span><br></pre></td></tr></table></figure>
+
+<h3 id="多个许可证"><a href="#多个许可证" class="headerlink" title="多个许可证"></a>多个许可证</h3><p>文件使用多个许可证。当一个代码我们已经被授予放入内核的权限，我们也应该保留其原始的许可条款</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">//</span> SPDX-License-Identifier: (GPL-<span class="number">2.0</span> WITH Linux-syscall-note) AND MIT</span><br></pre></td></tr></table></figure>
+
+<h2 id="模块许可规则"><a href="#模块许可规则" class="headerlink" title="模块许可规则"></a>模块许可规则</h2><p>模块许可规则应用于可加载模块，其不能替代SPDX也不提供明确的许可，只是提供足够的信息说明。常用如下即可</p>
+<figure class="highlight abnf"><table><tr><td class="code"><pre><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL v2&quot;</span>)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>MODULE_LICENSE(&quot;GPL v2&quot;);</code> 需要特殊说明，因为使用会污染内核，而且内核会拒绝将模块链接到使用EXPORT_SYMBOL_GPL()导出的符号</p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>linux哲学</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>内核开发学习手册-内核驱动接口</title>
+    <url>/archives/9.html</url>
+    <content><![CDATA[<h1 id="内核开发学习手册-内核驱动接口"><a href="#内核开发学习手册-内核驱动接口" class="headerlink" title="内核开发学习手册-内核驱动接口"></a>内核开发学习手册-内核驱动接口</h1><p>针对内核，无论是开发还是用户，我们所希望的是稳定的驱动功能，而稳定的驱动和有稳定的内核接口之间的联系，需要我们去思考，有助于理解linux的开发哲学。</p>
+<p>下文解释了：</p>
+<ol>
+<li>内核没有二进制内核接口</li>
+<li>内核的源代码接口不稳定<a id="more"></a>
+
+</li>
+</ol>
+<p>这个二进制接口可以理解为固定的驱动二进制驱动模块文件,即md5sum 是相同的。下面探讨的是作为一个驱动开发者，如果你的驱动没有释放到内核，但是想为不同架构，不同内核版本下的内核都提供稳定正确的二进制驱动模块文件是否是值得的。</p>
+<h2 id="二进制内核接口"><a href="#二进制内核接口" class="headerlink" title="二进制内核接口"></a>二进制内核接口</h2><p>首先从一个疑问开始：稳定的源代码接口是否意味着稳定的二进制内核接口，实际上并不是这样的，因为包括以下几点</p>
+<ol>
+<li>编译工具链不同版本会导致数据结构内部的对齐问题</li>
+<li>内核配置选项会导致数据结构成员不同，函数实现不同等。</li>
+<li>内核使用的内存会以不同的方式对齐</li>
+</ol>
+<p>这些都会导致一个特定内核下编译的二进制驱动程序大概率无法在另外一个架构下正确运行，因此避免在多环境下的令人头大的编译，最好的方法就是释放到内核</p>
+<h2 id="内核的源代码接口不稳定"><a href="#内核的源代码接口不稳定" class="headerlink" title="内核的源代码接口不稳定"></a>内核的源代码接口不稳定</h2><p>内核开发是快速迭代的，发现bug，有更好的实现方式，需要增加功能优化，或者安全性，稳定性，就需要进行接口修改，这就涉及到结构体的修改，函数成员的修改，甚至API的删除或者增加，如果保持维护旧的接口，会导致稳定性问题，设计到安全会更加严重，而且会浪费不必要的时间，毕竟开源人员的时间是宝贵的。</p>
+<p>当一个接口被重写时，我们需要对涉及的所有驱动代码进行修改，保证内核的正确运行</p>
+<h2 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h2><p>如果被授予了将源代码放入内核的权限，而且是GPL许可下的，最好释放到内核，不然可能需要自己去为每一个linux内核来维护二进制模块，而且释放到内核有如下优点</p>
+<ol>
+<li>驱动质量提升，开发者的维护成本降低</li>
+<li>代码的稳定性问题/性能问题/bug都会有其他人修复</li>
+<li>新功能特性的增加</li>
+<li>随时和内核版本是适配的，当驱动接口改变时，第一个提交的会同步修改驱动并保证正确运行</li>
+<li>不需要联系开发商去适配二进制驱动</li>
+</ol>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>linux哲学</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>内核补丁提交</title>
     <url>/archives/8.html</url>
     <content><![CDATA[<h1 id="内核补丁提交"><a href="#内核补丁提交" class="headerlink" title="内核补丁提交"></a>内核补丁提交</h1><p>本文将总结介绍提交内核补丁前的须知规范</p>
@@ -602,7 +882,7 @@
 <p><a href="http://lxr.linux.no/linux">linux-lxr</a></p>
 <h3 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h3><p>如果需要提交我们的补丁到内核，我们需要明确我们更改子系统的维护者。</p>
 <p><a href="http://vger.kernel.org/vger-lists.html/">子系统邮件服务器</a></p>
-<p>假如当我们需要给V4L打补丁前，我们可以订阅该子系统邮件，点击subscribe，会通过<a href="mailto:&#77;&#x61;&#x6a;&#x6f;&#114;&#x64;&#111;&#109;&#111;&#x40;&#118;&#103;&#101;&#x72;&#x2e;&#x6b;&#101;&#114;&#110;&#x65;&#x6c;&#46;&#111;&#114;&#x67;">&#77;&#x61;&#x6a;&#x6f;&#114;&#x64;&#111;&#109;&#111;&#x40;&#118;&#103;&#101;&#x72;&#x2e;&#x6b;&#101;&#114;&#110;&#x65;&#x6c;&#46;&#111;&#114;&#x67;</a>进行邮件订阅, 之后提交补丁以后可以通过邮件看到</p>
+<p>假如当我们需要给V4L打补丁前，我们可以订阅该子系统邮件，点击subscribe，会通过<a href="mailto:&#x4d;&#97;&#x6a;&#111;&#114;&#100;&#x6f;&#109;&#x6f;&#64;&#x76;&#103;&#101;&#x72;&#46;&#x6b;&#x65;&#x72;&#x6e;&#101;&#x6c;&#x2e;&#x6f;&#114;&#103;">&#x4d;&#97;&#x6a;&#111;&#114;&#100;&#x6f;&#109;&#x6f;&#64;&#x76;&#103;&#101;&#x72;&#46;&#x6b;&#x65;&#x72;&#x6e;&#101;&#x6c;&#x2e;&#x6f;&#114;&#103;</a>进行邮件订阅, 之后提交补丁以后可以通过邮件看到</p>
 <p>而邮件也是我们提交代码和代码review的方式</p>
 <p>建议使用如下规则回复进行订阅，否则可能会出现订阅失败</p>
 <figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">auth authid subscribe linux-subsys \</span><br><span class="line">        your-email</span><br></pre></td></tr></table></figure>
@@ -715,92 +995,6 @@
         <tag>bugzilla</tag>
         <tag>sparse</tag>
         <tag>coccinelle</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>linux内核开发学习手册-内核许可证</title>
-    <url>/archives/10.html</url>
-    <content><![CDATA[<h1 id="linux内核开发学习手册-内核许可证"><a href="#linux内核开发学习手册-内核许可证" class="headerlink" title="linux内核开发学习手册-内核许可证"></a>linux内核开发学习手册-内核许可证</h1><p>原文见：内核开发文档-Linux kernel licensing rules(Linux内核许可规则)</p>
-<h2 id="内核通用许可证"><a href="#内核通用许可证" class="headerlink" title="内核通用许可证"></a>内核通用许可证</h2><ul>
-<li>linux内核虽然是开源的，但是为了避免开发者的心血被不良厂商赚取利益等和保护开源环境，因此是有基于GPL-2.0() 的通用公共许可证作为法律保护的，具体的描述见<font color=#2196F3 >COPYING</font>文件。</li>
-</ul>
-<ul>
-<li>所有的内核源文件都需要标志许可证，而且这个许可证是可以与GPL-2.0兼容的，但是UAPI是作为例外的，因为是非内核的软件如果与内核通信，需要包含此头文件，但是我们不能要求该通信软件也受此许可证限制，因此此类特殊的例外许可描述也会被记录。</li>
-</ul>
-<a id="more"></a>
-
-<ul>
-<li>为了便于源文件的统一标识许可证,因此使用可解析的SPDX(Software Package Data Exchange)，当我们使用<code>./scripts/checkpatch.pl</code>来检查文件时，同时也会检查SPDX</li>
-</ul>
-<h2 id="内核许可规则"><a href="#内核许可规则" class="headerlink" title="内核许可规则"></a>内核许可规则</h2><p><a href="https://spdx.org/licenses/">内核许可列表</a>是官方列表，描述了可用的SPDX条目和已经不再使用的。比如<code>GPL-2.0-only</code>是比<code>GPL-2.0</code>更加规范的，目前广泛使用的的许可证见<code>LICENSES/preferred/</code></p>
-<h3 id="描述规则"><a href="#描述规则" class="headerlink" title="描述规则"></a>描述规则</h3><p>不同类型的文件有不同的描述规则。更多见内核开发文档</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">C source: <span class="regexp">//</span> SPDX-License-Identifier: &lt;SPDX License Expression&gt;</span><br><span class="line">C header: <span class="regexp">/* SPDX-License-Identifier: &lt;SPDX License Expression&gt; */</span></span><br><span class="line">scripts:  <span class="comment"># SPDX-License-Identifier: &lt;SPDX License Expression&gt;</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="SPDX声明位置"><a href="#SPDX声明位置" class="headerlink" title="SPDX声明位置"></a>SPDX声明位置</h3><p>应该放在第一行，虽然说有<code>#!PATH_TO_INTERPRETER</code>的时候在第二行，但是目前内核没有使用<code>#!PATH_TO_INTERPRETER</code>的脚本</p>
-<h3 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h3><p>通用语法如下</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">//</span> SPDX-License-Identifier: GPL-<span class="number">2.0</span>-only </span><br></pre></td></tr></table></figure>
-
-<p>当UAPI需要使用例外许可时，使用 <code>WITH</code>，例外许可证见<code>LICENSES/exceptions&lt;/font&gt;</code><br>`</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */</span></span><br></pre></td></tr></table></figure>
-
-<p>目前出了UAPI的例外，内核<font color=#2196F3 >LICENSES/exceptions</font>声明的例外还有GCC-exception-2.0，作为GCC链接例外，允许任意的二进制文件能够和该例外声明的文件编译的版本文件链接，使用基本都是arch/sh/lib/的汇编文件中</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">/* SPDX-License-Identifier: GPL-<span class="number">2.0</span>+ <span class="keyword">WITH</span> GCC-<span class="keyword">exception</span>-<span class="number">2.0</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="双重许可证"><a href="#双重许可证" class="headerlink" title="双重许可证"></a>双重许可证</h3><p>文件有双重许可，但是只有一个会被使用，多见dts文件</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">//</span> SPDX-License-Identifier: (GPL-<span class="number">2.0</span> WITH Linux-syscall-note) OR MIT</span><br></pre></td></tr></table></figure>
-
-<h3 id="多个许可证"><a href="#多个许可证" class="headerlink" title="多个许可证"></a>多个许可证</h3><p>文件使用多个许可证。当一个代码我们已经被授予放入内核的权限，我们也应该保留其原始的许可条款</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">//</span> SPDX-License-Identifier: (GPL-<span class="number">2.0</span> WITH Linux-syscall-note) AND MIT</span><br></pre></td></tr></table></figure>
-
-<h2 id="模块许可规则"><a href="#模块许可规则" class="headerlink" title="模块许可规则"></a>模块许可规则</h2><p>模块许可规则应用于可加载模块，其不能替代SPDX也不提供明确的许可，只是提供足够的信息说明。常用如下即可</p>
-<figure class="highlight abnf"><table><tr><td class="code"><pre><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL v2&quot;</span>)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
-
-<p><code>MODULE_LICENSE(&quot;GPL v2&quot;);</code> 需要特殊说明，因为使用会污染内核，而且内核会拒绝将模块链接到使用EXPORT_SYMBOL_GPL()导出的符号</p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-        <tag>linux哲学</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>内核开发学习手册-内核驱动接口</title>
-    <url>/archives/9.html</url>
-    <content><![CDATA[<h1 id="内核开发学习手册-内核驱动接口"><a href="#内核开发学习手册-内核驱动接口" class="headerlink" title="内核开发学习手册-内核驱动接口"></a>内核开发学习手册-内核驱动接口</h1><p>针对内核，无论是开发还是用户，我们所希望的是稳定的驱动功能，而稳定的驱动和有稳定的内核接口之间的联系，需要我们去思考，有助于理解linux的开发哲学。</p>
-<p>下文解释了：</p>
-<ol>
-<li>内核没有二进制内核接口</li>
-<li>内核的源代码接口不稳定<a id="more"></a>
-
-</li>
-</ol>
-<p>这个二进制接口可以理解为固定的驱动二进制驱动模块文件,即md5sum 是相同的。下面探讨的是作为一个驱动开发者，如果你的驱动没有释放到内核，但是想为不同架构，不同内核版本下的内核都提供稳定正确的二进制驱动模块文件是否是值得的。</p>
-<h2 id="二进制内核接口"><a href="#二进制内核接口" class="headerlink" title="二进制内核接口"></a>二进制内核接口</h2><p>首先从一个疑问开始：稳定的源代码接口是否意味着稳定的二进制内核接口，实际上并不是这样的，因为包括以下几点</p>
-<ol>
-<li>编译工具链不同版本会导致数据结构内部的对齐问题</li>
-<li>内核配置选项会导致数据结构成员不同，函数实现不同等。</li>
-<li>内核使用的内存会以不同的方式对齐</li>
-</ol>
-<p>这些都会导致一个特定内核下编译的二进制驱动程序大概率无法在另外一个架构下正确运行，因此避免在多环境下的令人头大的编译，最好的方法就是释放到内核</p>
-<h2 id="内核的源代码接口不稳定"><a href="#内核的源代码接口不稳定" class="headerlink" title="内核的源代码接口不稳定"></a>内核的源代码接口不稳定</h2><p>内核开发是快速迭代的，发现bug，有更好的实现方式，需要增加功能优化，或者安全性，稳定性，就需要进行接口修改，这就涉及到结构体的修改，函数成员的修改，甚至API的删除或者增加，如果保持维护旧的接口，会导致稳定性问题，设计到安全会更加严重，而且会浪费不必要的时间，毕竟开源人员的时间是宝贵的。</p>
-<p>当一个接口被重写时，我们需要对涉及的所有驱动代码进行修改，保证内核的正确运行</p>
-<h2 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h2><p>如果被授予了将源代码放入内核的权限，而且是GPL许可下的，最好释放到内核，不然可能需要自己去为每一个linux内核来维护二进制模块，而且释放到内核有如下优点</p>
-<ol>
-<li>驱动质量提升，开发者的维护成本降低</li>
-<li>代码的稳定性问题/性能问题/bug都会有其他人修复</li>
-<li>新功能特性的增加</li>
-<li>随时和内核版本是适配的，当驱动接口改变时，第一个提交的会同步修改驱动并保证正确运行</li>
-<li>不需要联系开发商去适配二进制驱动</li>
-</ol>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-        <tag>linux哲学</tag>
       </tags>
   </entry>
   <entry>

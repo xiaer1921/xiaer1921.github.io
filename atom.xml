@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-04-15T08:28:30.234Z</updated>
+  <updated>2022-04-24T09:55:40.277Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -15,6 +15,63 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title></title>
+    <link href="http://sholck.top/archives/0.html"/>
+    <id>http://sholck.top/archives/0.html</id>
+    <published>2022-04-24T09:55:40.281Z</published>
+    <updated>2022-04-24T09:55:40.277Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;figure class=&quot;highlight coq&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span</summary>
+        
+      
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Kbuild-Makefile学习</title>
+    <link href="http://sholck.top/archives/16.html"/>
+    <id>http://sholck.top/archives/16.html</id>
+    <published>2022-04-23T16:00:00.000Z</published>
+    <updated>2022-04-24T09:40:01.290Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;Kbuild学习&quot;&gt;&lt;a href=&quot;#Kbuild学习&quot; class=&quot;headerlink&quot; title=&quot;Kbuild学习&quot;&gt;&lt;/a&gt;Kbuild学习&lt;/h1&gt;&lt;p&gt;Kbuild的学习主要从三部分学习的&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;驱动模块的构建&lt;/li&gt;
+&lt;li&gt;vmlinux的构建&lt;/li&gt;
+&lt;li&gt;bzImage的构建&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;关于Kbuild，可以参考&lt;a href=&quot;https://www.kernel.org/doc/html/v5.18-rc3/kbuild/makefiles.html#&quot;&gt;Kbuild官方文档&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;关于Makefile构建linux的大体框架，见&lt;a href=&quot;https://www.kernel.org/doc/html/v5.18-rc3/kbuild/makefiles.html#architecture-makefiles&quot;&gt;Makefile框架&lt;/a&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="Kbuild" scheme="http://sholck.top/tags/Kbuild/"/>
+    
+    <category term="Makefile" scheme="http://sholck.top/tags/Makefile/"/>
+    
+    <category term="ld" scheme="http://sholck.top/tags/ld/"/>
+    
+    <category term="objcopy" scheme="http://sholck.top/tags/objcopy/"/>
+    
+    <category term="内核编译" scheme="http://sholck.top/tags/%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91/"/>
+    
+  </entry>
   
   <entry>
     <title>crash库的开源提交</title>
@@ -203,38 +260,6 @@
   </entry>
   
   <entry>
-    <title>内核补丁提交</title>
-    <link href="http://sholck.top/archives/8.html"/>
-    <id>http://sholck.top/archives/8.html</id>
-    <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-03-30T09:23:41.270Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;内核补丁提交&quot;&gt;&lt;a href=&quot;#内核补丁提交&quot; class=&quot;headerlink&quot; title=&quot;内核补丁提交&quot;&gt;&lt;/a&gt;内核补丁提交&lt;/h1&gt;&lt;p&gt;本文将总结介绍提交内核补丁前的须知规范&lt;/p&gt;
-&lt;p&gt;linux官方文档下有详细的关于此部分的描述&lt;a href=&quot;https://www.kernel.org/doc/html/v5.9/translations/zh_CN/process/index.html&quot;&gt;与Linux 内核社区一起工作&lt;/a&gt;&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
-    
-    
-    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
-    
-    <category term="mailing list" scheme="http://sholck.top/tags/mailing-list/"/>
-    
-    <category term="IRC" scheme="http://sholck.top/tags/IRC/"/>
-    
-    <category term="patchwork" scheme="http://sholck.top/tags/patchwork/"/>
-    
-    <category term="bugzilla" scheme="http://sholck.top/tags/bugzilla/"/>
-    
-    <category term="sparse" scheme="http://sholck.top/tags/sparse/"/>
-    
-    <category term="coccinelle" scheme="http://sholck.top/tags/coccinelle/"/>
-    
-  </entry>
-  
-  <entry>
     <title>linux内核开发学习手册-内核许可证</title>
     <link href="http://sholck.top/archives/10.html"/>
     <id>http://sholck.top/archives/10.html</id>
@@ -283,6 +308,38 @@
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="linux哲学" scheme="http://sholck.top/tags/linux%E5%93%B2%E5%AD%A6/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>内核补丁提交</title>
+    <link href="http://sholck.top/archives/8.html"/>
+    <id>http://sholck.top/archives/8.html</id>
+    <published>2022-03-29T16:00:00.000Z</published>
+    <updated>2022-03-30T09:23:41.270Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;内核补丁提交&quot;&gt;&lt;a href=&quot;#内核补丁提交&quot; class=&quot;headerlink&quot; title=&quot;内核补丁提交&quot;&gt;&lt;/a&gt;内核补丁提交&lt;/h1&gt;&lt;p&gt;本文将总结介绍提交内核补丁前的须知规范&lt;/p&gt;
+&lt;p&gt;linux官方文档下有详细的关于此部分的描述&lt;a href=&quot;https://www.kernel.org/doc/html/v5.9/translations/zh_CN/process/index.html&quot;&gt;与Linux 内核社区一起工作&lt;/a&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
+    
+    <category term="mailing list" scheme="http://sholck.top/tags/mailing-list/"/>
+    
+    <category term="IRC" scheme="http://sholck.top/tags/IRC/"/>
+    
+    <category term="patchwork" scheme="http://sholck.top/tags/patchwork/"/>
+    
+    <category term="bugzilla" scheme="http://sholck.top/tags/bugzilla/"/>
+    
+    <category term="sparse" scheme="http://sholck.top/tags/sparse/"/>
+    
+    <category term="coccinelle" scheme="http://sholck.top/tags/coccinelle/"/>
     
   </entry>
   
