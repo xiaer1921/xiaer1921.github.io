@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-04-25T07:37:16.044Z</updated>
+  <updated>2022-04-27T11:15:23.970Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -17,11 +17,44 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>linux模块初始化分析</title>
+    <link href="http://sholck.top/archives/17.html"/>
+    <id>http://sholck.top/archives/17.html</id>
+    <published>2022-04-26T16:00:00.000Z</published>
+    <updated>2022-04-27T11:15:23.970Z</updated>
+    
+    
+    <summary type="html">&lt;h2 id=&quot;模块接口分析&quot;&gt;&lt;a href=&quot;#模块接口分析&quot; class=&quot;headerlink&quot; title=&quot;模块接口分析&quot;&gt;&lt;/a&gt;模块接口分析&lt;/h2&gt;&lt;h3 id=&quot;模块编译&quot;&gt;&lt;a href=&quot;#模块编译&quot; class=&quot;headerlink&quot; title=&quot;模块编译&quot;&gt;&lt;/a&gt;模块编译&lt;/h3&gt;&lt;p&gt;在代码编译前宏展开时，需要进行条件编译，这需要gcc指定参数，而指定什么参数由Makefile来控制.&lt;br&gt;trace.c在编译时gcc中的参数中会带有 -D__KERNEL__, -DMODULE， -D__KBUILD_MODNAME=kmod_trace， 可以参考&lt;a href=&quot;https://sholck.top/archives/13.html&quot;&gt;linux-likely学习&lt;/a&gt;，这用在之后的宏展开。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux" scheme="http://sholck.top/categories/linux/"/>
+    
+    
+    <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
+    
+    <category term="objcopy" scheme="http://sholck.top/tags/objcopy/"/>
+    
+    <category term="内核编译" scheme="http://sholck.top/tags/%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91/"/>
+    
+    <category term="__used__" scheme="http://sholck.top/tags/used/"/>
+    
+    <category term="__section__" scheme="http://sholck.top/tags/section/"/>
+    
+    <category term="链接脚本" scheme="http://sholck.top/tags/%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC/"/>
+    
+    <category term="vmlinux.lds" scheme="http://sholck.top/tags/vmlinux-lds/"/>
+    
+    <category term="宏扩展" scheme="http://sholck.top/tags/%E5%AE%8F%E6%89%A9%E5%B1%95/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Kbuild-Makefile学习</title>
     <link href="http://sholck.top/archives/16.html"/>
     <id>http://sholck.top/archives/16.html</id>
     <published>2022-04-23T16:00:00.000Z</published>
-    <updated>2022-04-25T07:37:16.044Z</updated>
+    <updated>2022-04-27T09:24:38.489Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Kbuild学习&quot;&gt;&lt;a href=&quot;#Kbuild学习&quot; class=&quot;headerlink&quot; title=&quot;Kbuild学习&quot;&gt;&lt;/a&gt;Kbuild学习&lt;/h1&gt;&lt;p&gt;Kbuild的学习主要从三部分学习的&lt;/p&gt;
@@ -84,7 +117,7 @@
     <link href="http://sholck.top/archives/15.html"/>
     <id>http://sholck.top/archives/15.html</id>
     <published>2022-04-14T16:00:00.000Z</published>
-    <updated>2022-04-15T11:29:10.868Z</updated>
+    <updated>2022-04-27T08:58:26.590Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;gdb调试linux内核-amp-驱动模块&quot;&gt;&lt;a href=&quot;#gdb调试linux内核-amp-驱动模块&quot; class=&quot;headerlink&quot; title=&quot;gdb调试linux内核&amp;amp;驱动模块&quot;&gt;&lt;/a&gt;gdb调试linux内核&amp;amp;驱动模块&lt;/h1&gt;&lt;p&gt;在linux学习过程中，需要针对内核和动态模块进行调试，最常用的方法是gdb，但是&lt;a href=&quot;https://docs.kernel.org/dev-tools/gdb-kernel-debugging.html&quot;&gt;linux gdb文档&lt;/a&gt;中描述的不够详细，在学习调试过程中碰到了不少坑并做如下记录。&lt;/p&gt;</summary>
@@ -125,7 +158,7 @@
     <link href="http://sholck.top/archives/13.html"/>
     <id>http://sholck.top/archives/13.html</id>
     <published>2022-04-14T16:00:00.000Z</published>
-    <updated>2022-04-15T10:58:14.263Z</updated>
+    <updated>2022-04-27T08:55:22.185Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;linux-likely学习&quot;&gt;&lt;a href=&quot;#linux-likely学习&quot; class=&quot;headerlink&quot; title=&quot;linux-likely学习&quot;&gt;&lt;/a&gt;linux-likely学习&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在日常的工作和学习中，经常发现likely和unlikely的使用，在通知链节点注册时，有如下函数&lt;/p&gt;
@@ -165,7 +198,7 @@
     <link href="http://sholck.top/archives/12.html"/>
     <id>http://sholck.top/archives/12.html</id>
     <published>2022-04-14T16:00:00.000Z</published>
-    <updated>2022-04-15T11:14:43.538Z</updated>
+    <updated>2022-04-27T08:55:15.403Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;linux-通知链学习&quot;&gt;&lt;a href=&quot;#linux-通知链学习&quot; class=&quot;headerlink&quot; title=&quot;linux-通知链学习&quot;&gt;&lt;/a&gt;linux-通知链学习&lt;/h1&gt;&lt;h2 id=&quot;实现&quot;&gt;&lt;a href=&quot;#实现&quot; class=&quot;headerlink&quot; title=&quot;实现&quot;&gt;&lt;/a&gt;实现&lt;/h2&gt;&lt;p&gt;通知链notifier的实现为：A模块实现维护一个具备高优先级顺序的单向节点链表notifier，每一个节点有对应的函数指针和优先级。内核中的其他子系统模块B，C 如果对A中的事件感兴趣，那么需要向notifier上挂在一个子节点，并在此节点上注册回调。当事件发生时，遍历notifier上所有节点，并通过回调通知模块B，C，然后根据事件进行对应的处理。&lt;/p&gt;</summary>
@@ -482,7 +515,7 @@
     <link href="http://sholck.top/archives/1.html"/>
     <id>http://sholck.top/archives/1.html</id>
     <published>2021-03-09T14:00:00.000Z</published>
-    <updated>2022-04-25T09:43:28.707Z</updated>
+    <updated>2022-04-27T08:52:53.365Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
