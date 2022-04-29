@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-04-27T11:15:23.970Z</updated>
+  <updated>2022-04-29T09:47:56.797Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="http://sholck.top/archives/17.html"/>
     <id>http://sholck.top/archives/17.html</id>
     <published>2022-04-26T16:00:00.000Z</published>
-    <updated>2022-04-27T11:15:23.970Z</updated>
+    <updated>2022-04-29T09:47:56.797Z</updated>
     
     
     <summary type="html">&lt;h2 id=&quot;模块接口分析&quot;&gt;&lt;a href=&quot;#模块接口分析&quot; class=&quot;headerlink&quot; title=&quot;模块接口分析&quot;&gt;&lt;/a&gt;模块接口分析&lt;/h2&gt;&lt;h3 id=&quot;模块编译&quot;&gt;&lt;a href=&quot;#模块编译&quot; class=&quot;headerlink&quot; title=&quot;模块编译&quot;&gt;&lt;/a&gt;模块编译&lt;/h3&gt;&lt;p&gt;在代码编译前宏展开时，需要进行条件编译，这需要gcc指定参数，而指定什么参数由Makefile来控制.&lt;br&gt;trace.c在编译时gcc中的参数中会带有 -D__KERNEL__, -DMODULE， -D__KBUILD_MODNAME=kmod_trace， 可以参考&lt;a href=&quot;https://sholck.top/archives/13.html&quot;&gt;linux-likely学习&lt;/a&gt;，这用在之后的宏展开。&lt;/p&gt;</summary>
