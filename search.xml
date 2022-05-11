@@ -177,6 +177,123 @@
       </tags>
   </entry>
   <entry>
+    <title>cmpxchg kernel-api学习</title>
+    <url>/archives/18.html</url>
+    <content><![CDATA[<h1 id="cmpxchg-kernel-api"><a href="#cmpxchg-kernel-api" class="headerlink" title="cmpxchg kernel api"></a>cmpxchg kernel api</h1><p>cmpxchg是一个内核x86经常用到的api，功能是用来比较和交换的，带着以下疑问研究此api</p>
+<ol>
+<li>为什么需要设计成原子性的</li>
+<li>如何实现原子性</li>
+</ol>
+<a id="more"></a>
+
+<h2 id="函数设计"><a href="#函数设计" class="headerlink" title="函数设计"></a>函数设计</h2><p>函数原型设计如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">cmpxchg(A, C, B)</span><br><span class="line"></span><br><span class="line">include/linux/atomic/atomic-instrumented.h</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> cmpxchg(ptr, ...) \                                                                                                                                                                                         </span></span><br><span class="line">(&#123; \</span><br><span class="line">        typeof(ptr) __ai_ptr = (ptr); \     </span><br><span class="line">        kcsan_mb(); \     </span><br><span class="line">        instrument_atomic_write(__ai_ptr, <span class="keyword">sizeof</span>(*__ai_ptr)); \     </span><br><span class="line">        arch_cmpxchg(__ai_ptr, __VA_ARGS__); \     </span><br><span class="line">&#125;) </span><br></pre></td></tr></table></figure>
+
+<p>函数实现大体分为三部分</p>
+<ol>
+<li><code>kcsan_mb</code>, 2019年google新加检测设计，不开启KCSAN无用</li>
+<li><code>instrument_atomic_write</code> 当开启KASAN时，在实际的写发生前，通过检查影子内存来判定访问地址和地址内存是否合规 </li>
+<li><code>arch_cmpxchg</code> 平台强相关，通过汇编部分完成硬件辅助实现原子操作</li>
+</ol>
+<p>因此重点研究<code>arch_cmpxchg</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> arch_cmpxchg(ptr, old, new)                                     \    </span></span><br><span class="line">        __cmpxchg(ptr, old, <span class="keyword">new</span>, <span class="keyword">sizeof</span>(*(ptr)))    </span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __cmpxchg(ptr, old, new, size)                                  \                                                                                                                                           </span></span><br><span class="line">        __raw_cmpxchg((ptr), (old), (<span class="keyword">new</span>), (size), LOCK_PREFIX)       </span><br><span class="line"></span><br><span class="line"><span class="comment">//__raw_cmpxchg实现了不同字长的数据交换</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Atomic compare and exchange.  Compare OLD with MEM, if identical,</span></span><br><span class="line"><span class="comment"> * store NEW in MEM.  Return the initial value in MEM.  Success is</span></span><br><span class="line"><span class="comment"> * indicated by comparing RETURN with OLD.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __raw_cmpxchg(ptr, old, new, size, lock)                        \</span></span><br><span class="line">(&#123;                                                                      \</span><br><span class="line">        __typeof__(*(ptr)) __ret;                                       \</span><br><span class="line">        __typeof__(*(ptr)) __old = (old);                               \</span><br><span class="line">        __typeof__(*(ptr)) __new = (<span class="keyword">new</span>);                               \</span><br><span class="line">        <span class="keyword">switch</span> (size) &#123;                                                 \</span><br><span class="line">        <span class="keyword">case</span> __X86_CASE_B:                                              \</span><br><span class="line">        &#123;                                                               \</span><br><span class="line">                <span class="keyword">volatile</span> u8 *__ptr = (<span class="keyword">volatile</span> u8 *)(ptr);              \</span><br><span class="line">                <span class="keyword">asm</span> <span class="keyword">volatile</span>(lock <span class="string">&quot;cmpxchgb %2,%1&quot;</span>                      \</span><br><span class="line">                             : <span class="string">&quot;=a&quot;</span> (__ret), <span class="string">&quot;+m&quot;</span> (*__ptr)              \</span><br><span class="line">                             : <span class="string">&quot;q&quot;</span> (__new), <span class="string">&quot;0&quot;</span> (__old)                 \</span><br><span class="line">                             : <span class="string">&quot;memory&quot;</span>);                               \</span><br><span class="line">                <span class="keyword">break</span>;                                                  \</span><br><span class="line">        &#125;                                                               \</span><br><span class="line">        <span class="keyword">case</span> __X86_CASE_W:                                              \</span><br><span class="line">        &#123;                                                               \</span><br><span class="line">                <span class="keyword">volatile</span> u16 *__ptr = (<span class="keyword">volatile</span> u16 *)(ptr);            \</span><br><span class="line">                <span class="keyword">asm</span> <span class="keyword">volatile</span>(lock <span class="string">&quot;cmpxchgw %2,%1&quot;</span>                      \</span><br><span class="line">                             : <span class="string">&quot;=a&quot;</span> (__ret), <span class="string">&quot;+m&quot;</span> (*__ptr)              \</span><br><span class="line">                             : <span class="string">&quot;r&quot;</span> (__new), <span class="string">&quot;0&quot;</span> (__old)                 \</span><br><span class="line">                             : <span class="string">&quot;memory&quot;</span>);                               \</span><br><span class="line">                <span class="keyword">break</span>;                                                  \</span><br><span class="line">        &#125;                                                               \</span><br><span class="line">        <span class="keyword">case</span> __X86_CASE_L:                                              \                                                                                                                                           </span><br><span class="line">        &#123;                                                               \</span><br><span class="line">                <span class="keyword">volatile</span> u32 *__ptr = (<span class="keyword">volatile</span> u32 *)(ptr);            \</span><br><span class="line">                <span class="keyword">asm</span> <span class="keyword">volatile</span>(lock <span class="string">&quot;cmpxchgl %2,%1&quot;</span>                      \</span><br><span class="line">                             : <span class="string">&quot;=a&quot;</span> (__ret), <span class="string">&quot;+m&quot;</span> (*__ptr)              \</span><br><span class="line">                             : <span class="string">&quot;r&quot;</span> (__new), <span class="string">&quot;0&quot;</span> (__old)                 \</span><br><span class="line">                             : <span class="string">&quot;memory&quot;</span>);                               \</span><br><span class="line">                <span class="keyword">break</span>;                                                  \</span><br><span class="line">        &#125;                                                               \</span><br><span class="line">        <span class="keyword">case</span> __X86_CASE_Q:                                              \</span><br><span class="line">        &#123;                                                               \</span><br><span class="line">                <span class="keyword">volatile</span> u64 *__ptr = (<span class="keyword">volatile</span> u64 *)(ptr);            \</span><br><span class="line">                <span class="keyword">asm</span> <span class="keyword">volatile</span>(lock <span class="string">&quot;cmpxchgq %2,%1&quot;</span>                      \</span><br><span class="line">                             : <span class="string">&quot;=a&quot;</span> (__ret), <span class="string">&quot;+m&quot;</span> (*__ptr)              \</span><br><span class="line">                             : <span class="string">&quot;r&quot;</span> (__new), <span class="string">&quot;0&quot;</span> (__old)                 \</span><br><span class="line">                             : <span class="string">&quot;memory&quot;</span>);                               \</span><br><span class="line">                <span class="keyword">break</span>;                                                  \</span><br><span class="line">        &#125;                                                               \</span><br><span class="line">        <span class="keyword">default</span>:                                                        \</span><br><span class="line">                __cmpxchg_wrong_size();                                 \</span><br><span class="line">        &#125;                                                               \</span><br><span class="line">        __ret;                                                          \</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>看一下汇编的逻辑：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">case</span> __X86_CASE_L:                                              \                                                                                                                                           </span><br><span class="line">&#123;                                                               \</span><br><span class="line">        <span class="keyword">volatile</span> u32 *__ptr = (<span class="keyword">volatile</span> u32 *)(ptr);            \</span><br><span class="line">        <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(lock <span class="string">&quot;cmpxchgl %2,%1&quot;</span>                      \</span></span></span><br><span class="line"><span class="function"><span class="params">                     : <span class="string">&quot;=a&quot;</span> (__ret), <span class="string">&quot;+m&quot;</span> (*__ptr)              \</span></span></span><br><span class="line"><span class="function"><span class="params">                     : <span class="string">&quot;r&quot;</span> (__new), <span class="string">&quot;0&quot;</span> (__old)                 \</span></span></span><br><span class="line"><span class="function"><span class="params">                     : <span class="string">&quot;memory&quot;</span>)</span></span>;                               \</span><br><span class="line">        <span class="keyword">break</span>;                                                  \</span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<p>这段内嵌汇编有两个操作数(占位符)  ,对应如下</p>
+<figure class="highlight sqf"><table><tr><td class="code"><pre><span class="line">操作数          操作数说明          c语言表达式</span><br><span class="line">%<span class="number">0</span>(输出部分)          <span class="string">&quot;=a&quot;</span>            <span class="variable">__ret</span>       = 代表输出操作数只写  a是eax寄存器  ，整体意思是运算完成需要将eax的结果存入<span class="variable">__ret</span></span><br><span class="line">%<span class="number">1</span>(输出部分)          <span class="string">&quot;+m&quot;</span>            *<span class="variable">__ptr</span>      + 代表输出操作数可读可写  m指明是内存变量 *<span class="variable">__ptr</span>的值，不需要绑定寄存器，即操作数是放在内存中的，不是寄存器</span><br><span class="line">%<span class="number">2</span>(输入部分)          <span class="string">&quot;r&quot;</span>             <span class="variable">__new</span>       r指将输入变量放入到通用寄存器(动态分配)</span><br><span class="line">%<span class="number">3</span>(输入部分)          <span class="string">&quot;0&quot;</span>             <span class="variable">__old</span>       <span class="number">0</span>是用来匹配的，即<span class="variable">__old</span>操作数将用来和指定的操作数匹配</span><br><span class="line">被修改部分            <span class="string">&quot;memory&quot;</span>   因为 <span class="variable">__new</span>， <span class="variable">__old</span>是被从内存装载到寄存器的，在内嵌汇编之后再使用这些变量，应该从内存重新装载，而不是使用寄存器的值，因为寄存器的值可能已经发生改变</span><br></pre></td></tr></table></figure>
+
+<p>因此<code>cmpxchgl %2,%1</code>可以理解为 <code>cmpxchgl __new, *__ptr</code></p>
+<p>cmxchgl 指令的作用是比较并交换 (寄存器/内存变量)和 (寄存器) 的值,该指令集语法如下</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Intel语法: 目的操作数，源操作数   CMPXCHG EBX,ECX ；如果EAX与EBX相等，则ECX送EBX且ZF置<span class="number">1</span>；否则EBX送EAX，且ZF清<span class="number">0</span></span><br><span class="line"></span><br><span class="line">AT&amp;T语法：源操作数，目的操作数   cmpxchg %ecx, %ebx；如果EAX与EBX相等，则ECX送EBX且ZF置<span class="number">1</span>；否则EBX送EAX，且ZF清<span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<p>这里需要注意</p>
+<ol>
+<li>linux内核用的AT&amp;T汇编语言，包括目前启动时的<code>arch/x86/boot/header.S</code>, 早期的linux kernel开始时的bootsect.s和setu.s是用intel的汇编</li>
+<li>inter的汇编只能用在inter的x86上，AT&amp;T是可以在多种cpu上使用的，arm也有自己的汇编</li>
+</ol>
+<p>因此这里按照AT&amp;T语法解读为：__new读出给ecx寄存器， *__ptr为目标内存变量，__old作为匹配数，存放到EAX</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//__raw_cmpxchg(ptr, old, new, size, lock)</span></span><br><span class="line">%ebx(mem)     %eax     %ecx</span><br><span class="line">*__ptr        __old    __new</span><br></pre></td></tr></table></figure>
+
+<p>if(*__ptr == __old) <em>__ptr = __new<br>if(</em>__ptr != __old) __old = *__ptr</p>
+<p>因此api <code>cmpxchg</code>逻辑可以理解为函数如下</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//R=cmpxchg(A, C, B)</span></span><br><span class="line">cmpxchg(__ptr, __old, __new)&#123;</span><br><span class="line">    <span class="keyword">if</span>(*__ptr == __old)  &#123;</span><br><span class="line">        *__ptr = __new;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        __old = *__ptr;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> __old;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//执行完成只有输出部分会改变， 即__ptr指向的内存， __old的值内存上不会改变，因为是作用为寄存器上的。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//从结果来看，我们可以从R和C的值对比检查A是否有更新</span></span><br><span class="line"><span class="keyword">if</span> A==C C不变， <span class="keyword">return</span> C</span><br><span class="line"><span class="keyword">if</span> A!=C C=A     <span class="keyword">return</span> C</span><br></pre></td></tr></table></figure>
+
+<h2 id="疑问解答"><a href="#疑问解答" class="headerlink" title="疑问解答"></a>疑问解答</h2><ol>
+<li><p>为什么需要设计成原子性？<br> 保证共享内存操作是多处理器下线程同步的</p>
+</li>
+<li><p>为什么不使用锁机制？<br> 锁性能较差，需要减少锁的使用，这一行为称为lockless，即无锁机制</p>
+</li>
+<li><p>硬件辅助是如何保证原子性的？</p>
+<p> a. 内嵌汇编使用volatile, 为<code>__volatile__</code>别名，告知编译器不会对内嵌汇编进行优化，指令保持原样</p>
+<p> b. 内嵌汇编时使用lock, 带lock的指令在操作前会锁总线，xchg指令默认就是会锁总线的，保证指令执行的原子性(什么是锁总线？锁总线为什么能保持指令的原子性)</p>
+ <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/x86/include/asm/cmpxchg.h</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Note: no &quot;lock&quot; prefix even on SMP: xchg always implies lock anyway.</span></span><br><span class="line"><span class="comment"> * Since this is generally used to protect other memory information, we</span></span><br><span class="line"><span class="comment"> * use &quot;asm volatile&quot; and &quot;memory&quot; clobbers to prevent gcc from moving</span></span><br><span class="line"><span class="comment"> * information around.</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+
+<p> c. 内嵌汇编clobbers部分使用memory修饰</p>
+<pre><code> memory告知gcc编译器：
+     1. 不要将这段指令和内嵌汇编前的指令重新排序，也就是在执行内嵌汇编代码之前，它前面的指令都执行完毕
+     2. 不要将内存变量缓存到寄存器，因为指令中可能用到了内存变量，而这些变量可能会因为其他原因改变，比如*__ptr。
+     3. 在内嵌汇编之后再使用内嵌汇编中的变量，应该从内存重新装载，而不是使用寄存器的值，因为寄存器的值可能已经发生改变, 比如__old</code></pre>
+</li>
+</ol>
+<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><ol>
+<li><p>编译器优化</p>
+</li>
+<li><p>volatile修饰变量指的是变量可能被其他线程改变，因此不将该变量存入寄存器，每次读取都从内存读取</p>
+</li>
+<li><p>锁总线, 锁缓存</p>
+</li>
+<li><p>memory barrier 内存屏障</p>
+</li>
+<li><p>缓存一致性</p>
+</li>
+</ol>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ol>
+<li><p><a href="https://blog.csdn.net/zdy0_2004/article/details/48013829">Linux内核中的cmpxchg函数</a></p>
+</li>
+<li><p><a href="https://www.cnblogs.com/wlzy/p/6024165.html">内嵌汇编 %0，%1 是什么</a></p>
+</li>
+<li><p><a href="https://baijiahao.baidu.com/s?id=1722268508697136684&wfr=spider&for=pc">嵌入式汇编（内联汇编)</a></p>
+</li>
+<li><p><a href="https://blog.csdn.net/qq_33620071/article/details/102846431">内嵌汇编</a></p>
+</li>
+<li><p><a href="https://www.jianshu.com/p/e3d1fb4cac4a">GNU C内嵌汇编语言</a></p>
+</li>
+<li><p><a href="https://zhidao.baidu.com/question/562123380899416244.html">linux内核是用8086汇编还是Intel汇编还是AT&amp;T汇编写的？</a></p>
+</li>
+<li><p><a href="https://zhidao.baidu.com/question/424592744355848412.html">AT&amp;T汇编、Intel汇编、arm汇编关联</a></p>
+</li>
+<li><p><a href="https://blog.csdn.net/lotluck/article/details/78326168">内嵌汇编 - cmpxchgl 指令学习笔记</a></p>
+</li>
+<li><p><a href="https://blog.csdn.net/lotluck/article/details/78326168">GCC在C语言中内嵌汇编 asm <strong>volatile</strong></a>  对编译器优化有很好的描述</p>
+</li>
+<li><p><a href="https://blog.csdn.net/miaomao1989/article/details/47858113">GCC在C语言中内嵌汇编 asm <strong>volatile</strong> (2)</a></p>
+</li>
+<li><p><a href="https://www.linuxidc.com/Linux/2011-10/44627p2.htm">原子性操作atomic_t</a></p>
+</li>
+<li><p><a href="https://blog.csdn.net/weixin_34663036/article/details/117015751">linux xchgl 汇编含义,X86 xchgl和cmpxchgl指令替换案例分享</a></p>
+</li>
+</ol>
+<p>深入：</p>
+<ol start="13">
+<li><p><a href="https://article.itxueyuan.com/nWM5Ge">深入理解原子操作的本质</a></p>
+</li>
+<li><p><a href="https://strikefreedom.top/cpu-caches-theory-and-application">【译】CPU 高速缓存原理和应用</a></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>linux-api</category>
+      </categories>
+      <tags>
+        <tag>cmpxchg</tag>
+        <tag>内嵌汇编</tag>
+        <tag>锁总线</tag>
+        <tag>原子性</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>linux模块初始化分析</title>
     <url>/archives/17.html</url>
     <content><![CDATA[<h2 id="模块接口分析"><a href="#模块接口分析" class="headerlink" title="模块接口分析"></a>模块接口分析</h2><h3 id="模块编译"><a href="#模块编译" class="headerlink" title="模块编译"></a>模块编译</h3><p>在代码编译前宏展开时，需要进行条件编译，这需要gcc指定参数，而指定什么参数由Makefile来控制.<br>trace.c在编译时gcc中的参数中会带有 -D__KERNEL__, -DMODULE， -D__KBUILD_MODNAME=kmod_trace， 可以参考<a href="https://sholck.top/archives/13.html">linux-likely学习</a>，这用在之后的宏展开。</p>
@@ -1191,7 +1308,7 @@
 <p><a href="http://lxr.linux.no/linux">linux-lxr</a></p>
 <h3 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h3><p>如果需要提交我们的补丁到内核，我们需要明确我们更改子系统的维护者。</p>
 <p><a href="http://vger.kernel.org/vger-lists.html/">子系统邮件服务器</a></p>
-<p>假如当我们需要给V4L打补丁前，我们可以订阅该子系统邮件，点击subscribe，会通过<a href="mailto:&#x4d;&#x61;&#x6a;&#111;&#x72;&#100;&#x6f;&#109;&#111;&#64;&#118;&#x67;&#x65;&#x72;&#46;&#107;&#x65;&#114;&#x6e;&#x65;&#108;&#46;&#x6f;&#114;&#103;">&#x4d;&#x61;&#x6a;&#111;&#x72;&#100;&#x6f;&#109;&#111;&#64;&#118;&#x67;&#x65;&#x72;&#46;&#107;&#x65;&#114;&#x6e;&#x65;&#108;&#46;&#x6f;&#114;&#103;</a>进行邮件订阅, 之后提交补丁以后可以通过邮件看到</p>
+<p>假如当我们需要给V4L打补丁前，我们可以订阅该子系统邮件，点击subscribe，会通过<a href="mailto:&#x4d;&#x61;&#106;&#x6f;&#x72;&#100;&#111;&#109;&#x6f;&#64;&#x76;&#x67;&#101;&#114;&#46;&#x6b;&#101;&#x72;&#x6e;&#101;&#108;&#x2e;&#111;&#114;&#x67;">&#x4d;&#x61;&#106;&#x6f;&#x72;&#100;&#111;&#109;&#x6f;&#64;&#x76;&#x67;&#101;&#114;&#46;&#x6b;&#101;&#x72;&#x6e;&#101;&#108;&#x2e;&#111;&#114;&#x67;</a>进行邮件订阅, 之后提交补丁以后可以通过邮件看到</p>
 <p>而邮件也是我们提交代码和代码review的方式</p>
 <p>建议使用如下规则回复进行订阅，否则可能会出现订阅失败</p>
 <figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">auth authid subscribe linux-subsys \</span><br><span class="line">        your-email</span><br></pre></td></tr></table></figure>

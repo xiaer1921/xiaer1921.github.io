@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-04-29T09:47:56.797Z</updated>
+  <updated>2022-05-11T13:11:52.858Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>cmpxchg kernel-api学习</title>
+    <link href="http://sholck.top/archives/18.html"/>
+    <id>http://sholck.top/archives/18.html</id>
+    <published>2022-05-10T16:00:00.000Z</published>
+    <updated>2022-05-11T13:11:52.858Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;cmpxchg-kernel-api&quot;&gt;&lt;a href=&quot;#cmpxchg-kernel-api&quot; class=&quot;headerlink&quot; title=&quot;cmpxchg kernel api&quot;&gt;&lt;/a&gt;cmpxchg kernel api&lt;/h1&gt;&lt;p&gt;cmpxchg是一个内核x86经常用到的api，功能是用来比较和交换的，带着以下疑问研究此api&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;为什么需要设计成原子性的&lt;/li&gt;
+&lt;li&gt;如何实现原子性&lt;/li&gt;
+&lt;/ol&gt;</summary>
+    
+    
+    
+    <category term="linux-api" scheme="http://sholck.top/categories/linux-api/"/>
+    
+    
+    <category term="cmpxchg" scheme="http://sholck.top/tags/cmpxchg/"/>
+    
+    <category term="内嵌汇编" scheme="http://sholck.top/tags/%E5%86%85%E5%B5%8C%E6%B1%87%E7%BC%96/"/>
+    
+    <category term="锁总线" scheme="http://sholck.top/tags/%E9%94%81%E6%80%BB%E7%BA%BF/"/>
+    
+    <category term="原子性" scheme="http://sholck.top/tags/%E5%8E%9F%E5%AD%90%E6%80%A7/"/>
+    
+  </entry>
   
   <entry>
     <title>linux模块初始化分析</title>
