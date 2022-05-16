@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-05-11T13:11:52.858Z</updated>
+  <updated>2022-05-16T09:50:07.546Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>linux-assembly入门学习</title>
+    <link href="http://sholck.top/archives/19.html"/>
+    <id>http://sholck.top/archives/19.html</id>
+    <published>2022-05-15T16:00:00.000Z</published>
+    <updated>2022-05-16T09:50:07.546Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;linux-assembly入门学习&quot;&gt;&lt;a href=&quot;#linux-assembly入门学习&quot; class=&quot;headerlink&quot; title=&quot;linux-assembly入门学习&quot;&gt;&lt;/a&gt;linux-assembly入门学习&lt;/h1&gt;&lt;h2 id=&quot;学习目的&quot;&gt;&lt;a href=&quot;#学习目的&quot; class=&quot;headerlink&quot; title=&quot;学习目的&quot;&gt;&lt;/a&gt;学习目的&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;应用：kernel底层有着大量的汇编语言，包括机器启动强相关的header.s 和原子性函数实现等内嵌汇编&lt;/li&gt;
+&lt;li&gt;需求：应用coredump，内核转储，内存分析都需要了解汇编才能更深入分析dump现场&lt;/li&gt;
+&lt;li&gt;提升：根据汇编分析寄存器变化，对堆栈分配，寻址方式等机器运行方式，了解架构机器真正运作的方式&lt;/li&gt;
+&lt;/ol&gt;</summary>
+    
+    
+    
+    <category term="linux-assembly" scheme="http://sholck.top/categories/linux-assembly/"/>
+    
+    
+    <category term="汇编" scheme="http://sholck.top/tags/%E6%B1%87%E7%BC%96/"/>
+    
+  </entry>
   
   <entry>
     <title>cmpxchg kernel-api学习</title>
@@ -156,11 +179,11 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
-    
-    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
     
     <category term="linux模块" scheme="http://sholck.top/tags/linux%E6%A8%A1%E5%9D%97/"/>
     
@@ -204,6 +227,8 @@
     
     <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
     
+    <category term="汇编" scheme="http://sholck.top/tags/%E6%B1%87%E7%BC%96/"/>
+    
     <category term="objdump" scheme="http://sholck.top/tags/objdump/"/>
     
     <category term="nm" scheme="http://sholck.top/tags/nm/"/>
@@ -215,8 +240,6 @@
     <category term="gcc" scheme="http://sholck.top/tags/gcc/"/>
     
     <category term="编译优化" scheme="http://sholck.top/tags/%E7%BC%96%E8%AF%91%E4%BC%98%E5%8C%96/"/>
-    
-    <category term="汇编" scheme="http://sholck.top/tags/%E6%B1%87%E7%BC%96/"/>
     
     <category term="模块编译" scheme="http://sholck.top/tags/%E6%A8%A1%E5%9D%97%E7%BC%96%E8%AF%91/"/>
     
@@ -405,11 +428,11 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="gdb" scheme="http://sholck.top/tags/gdb/"/>
-    
-    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
@@ -433,9 +456,9 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
-    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
-    
     <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
@@ -460,11 +483,11 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
-    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
-    
     <category term="strace" scheme="http://sholck.top/tags/strace/"/>
     
     <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
@@ -487,11 +510,11 @@
     <category term="linux" scheme="http://sholck.top/categories/linux/"/>
     
     
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
     <category term="linux" scheme="http://sholck.top/tags/linux/"/>
     
     <category term="crash" scheme="http://sholck.top/tags/crash/"/>
-    
-    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
     
     <category term="kernel-tool" scheme="http://sholck.top/tags/kernel-tool/"/>
     
