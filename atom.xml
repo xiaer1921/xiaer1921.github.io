@@ -6,7 +6,7 @@
   <link href="http://sholck.top/atom.xml" rel="self"/>
   
   <link href="http://sholck.top/"/>
-  <updated>2022-06-16T19:16:55.379Z</updated>
+  <updated>2022-12-12T15:12:54.705Z</updated>
   <id>http://sholck.top/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>ION内存泄漏导致稳定性排查</title>
+    <link href="http://sholck.top/archives/21.html"/>
+    <id>http://sholck.top/archives/21.html</id>
+    <published>2022-12-11T16:00:00.000Z</published>
+    <updated>2022-12-12T15:12:54.705Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;ION内存泄漏导致稳定性排查&quot;&gt;&lt;a href=&quot;#ION内存泄漏导致稳定性排查&quot; class=&quot;headerlink&quot; title=&quot;ION内存泄漏导致稳定性排查&quot;&gt;&lt;/a&gt;ION内存泄漏导致稳定性排查&lt;/h1&gt;&lt;p&gt;这是一次ion接口操作不规范引起内存泄漏，导致binder通信失败，最终定时器超时触发crash的稳定性问题排查&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="memory" scheme="http://sholck.top/categories/memory/"/>
+    
+    
+    <category term="strace" scheme="http://sholck.top/tags/strace/"/>
+    
+    <category term="内存泄露" scheme="http://sholck.top/tags/%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/"/>
+    
+    <category term="稳定性" scheme="http://sholck.top/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/"/>
+    
+    <category term="binder" scheme="http://sholck.top/tags/binder/"/>
+    
+  </entry>
+  
+  <entry>
     <title>x86下系统调用</title>
     <link href="http://sholck.top/archives/20.html"/>
     <id>http://sholck.top/archives/20.html</id>
     <published>2022-06-16T16:00:00.000Z</published>
-    <updated>2022-06-16T19:16:55.379Z</updated>
+    <updated>2022-12-12T15:25:11.806Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;x86下系统调用&quot;&gt;&lt;a href=&quot;#x86下系统调用&quot; class=&quot;headerlink&quot; title=&quot;x86下系统调用&quot;&gt;&lt;/a&gt;x86下系统调用&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;经过之前的&lt;a href=&quot;https://sholck.top/archives/19.html#%E8%A7%A3%E6%9E%90%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0&quot;&gt;汇编实践-解析命令行参数&lt;/a&gt;学习，发现在进行系统调用时，不管是调用syscall(), 还是libc封装的系统调用，最终都是通过int $0x80(32位 i386)或者syscall(x86_64)进入内核态从而调用对应的底层实现，x86_32是通过一个0x80的软中断实现的，而x86_64是通过汇编指令syscall实现。&lt;/p&gt;
@@ -47,7 +72,7 @@
     <link href="http://sholck.top/archives/19.html"/>
     <id>http://sholck.top/archives/19.html</id>
     <published>2022-05-15T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.790Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;linux-assembly入门学习&quot;&gt;&lt;a href=&quot;#linux-assembly入门学习&quot; class=&quot;headerlink&quot; title=&quot;linux-assembly入门学习&quot;&gt;&lt;/a&gt;linux-assembly入门学习&lt;/h1&gt;&lt;h2 id=&quot;学习目的&quot;&gt;&lt;a href=&quot;#学习目的&quot; class=&quot;headerlink&quot; title=&quot;学习目的&quot;&gt;&lt;/a&gt;学习目的&lt;/h2&gt;&lt;ol&gt;
@@ -70,7 +95,7 @@
     <link href="http://sholck.top/archives/18.html"/>
     <id>http://sholck.top/archives/18.html</id>
     <published>2022-05-10T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.790Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;cmpxchg-kernel-api&quot;&gt;&lt;a href=&quot;#cmpxchg-kernel-api&quot; class=&quot;headerlink&quot; title=&quot;cmpxchg kernel api&quot;&gt;&lt;/a&gt;cmpxchg kernel api&lt;/h1&gt;&lt;p&gt;cmpxchg是一个内核x86经常用到的api，功能是用来比较和交换的，带着以下疑问研究此api&lt;/p&gt;
@@ -99,7 +124,7 @@
     <link href="http://sholck.top/archives/17.html"/>
     <id>http://sholck.top/archives/17.html</id>
     <published>2022-04-26T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.822Z</updated>
+    <updated>2022-12-08T15:41:22.104Z</updated>
     
     
     <summary type="html">&lt;h2 id=&quot;模块接口分析&quot;&gt;&lt;a href=&quot;#模块接口分析&quot; class=&quot;headerlink&quot; title=&quot;模块接口分析&quot;&gt;&lt;/a&gt;模块接口分析&lt;/h2&gt;&lt;h3 id=&quot;模块编译&quot;&gt;&lt;a href=&quot;#模块编译&quot; class=&quot;headerlink&quot; title=&quot;模块编译&quot;&gt;&lt;/a&gt;模块编译&lt;/h3&gt;&lt;p&gt;在代码编译前宏展开时，需要进行条件编译，这需要gcc指定参数，而指定什么参数由Makefile来控制.&lt;br&gt;trace.c在编译时gcc中的参数中会带有 -D__KERNEL__, -DMODULE， -D__KBUILD_MODNAME=kmod_trace， 可以参考&lt;a href=&quot;https://sholck.top/archives/13.html&quot;&gt;linux-likely学习&lt;/a&gt;，这用在之后的宏展开。&lt;/p&gt;</summary>
@@ -132,7 +157,7 @@
     <link href="http://sholck.top/archives/16.html"/>
     <id>http://sholck.top/archives/16.html</id>
     <published>2022-04-23T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.818Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Kbuild学习&quot;&gt;&lt;a href=&quot;#Kbuild学习&quot; class=&quot;headerlink&quot; title=&quot;Kbuild学习&quot;&gt;&lt;/a&gt;Kbuild学习&lt;/h1&gt;&lt;p&gt;Kbuild的学习主要从三部分学习的&lt;/p&gt;
@@ -168,7 +193,7 @@
     <link href="http://sholck.top/archives/14.html"/>
     <id>http://sholck.top/archives/14.html</id>
     <published>2022-04-14T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.790Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;crash库的开源提交&quot;&gt;&lt;a href=&quot;#crash库的开源提交&quot; class=&quot;headerlink&quot; title=&quot;crash库的开源提交&quot;&gt;&lt;/a&gt;crash库的开源提交&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在学习crash分析kernel 5.17.0+ dump时，遇到一些问题&lt;/p&gt;</summary>
@@ -195,7 +220,7 @@
     <link href="http://sholck.top/archives/12.html"/>
     <id>http://sholck.top/archives/12.html</id>
     <published>2022-04-14T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.818Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;linux-通知链学习&quot;&gt;&lt;a href=&quot;#linux-通知链学习&quot; class=&quot;headerlink&quot; title=&quot;linux-通知链学习&quot;&gt;&lt;/a&gt;linux-通知链学习&lt;/h1&gt;&lt;h2 id=&quot;实现&quot;&gt;&lt;a href=&quot;#实现&quot; class=&quot;headerlink&quot; title=&quot;实现&quot;&gt;&lt;/a&gt;实现&lt;/h2&gt;&lt;p&gt;通知链notifier的实现为：A模块实现维护一个具备高优先级顺序的单向节点链表notifier，每一个节点有对应的函数指针和优先级。内核中的其他子系统模块B，C 如果对A中的事件感兴趣，那么需要向notifier上挂在一个子节点，并在此节点上注册回调。当事件发生时，遍历notifier上所有节点，并通过回调通知模块B，C，然后根据事件进行对应的处理。&lt;/p&gt;</summary>
@@ -222,7 +247,7 @@
     <link href="http://sholck.top/archives/15.html"/>
     <id>http://sholck.top/archives/15.html</id>
     <published>2022-04-14T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.818Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;gdb调试linux内核-amp-驱动模块&quot;&gt;&lt;a href=&quot;#gdb调试linux内核-amp-驱动模块&quot; class=&quot;headerlink&quot; title=&quot;gdb调试linux内核&amp;amp;驱动模块&quot;&gt;&lt;/a&gt;gdb调试linux内核&amp;amp;驱动模块&lt;/h1&gt;&lt;p&gt;在linux学习过程中，需要针对内核和动态模块进行调试，最常用的方法是gdb，但是&lt;a href=&quot;https://docs.kernel.org/dev-tools/gdb-kernel-debugging.html&quot;&gt;linux gdb文档&lt;/a&gt;中描述的不够详细，在学习调试过程中碰到了不少坑并做如下记录。&lt;/p&gt;</summary>
@@ -263,7 +288,7 @@
     <link href="http://sholck.top/archives/13.html"/>
     <id>http://sholck.top/archives/13.html</id>
     <published>2022-04-14T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.818Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;linux-likely学习&quot;&gt;&lt;a href=&quot;#linux-likely学习&quot; class=&quot;headerlink&quot; title=&quot;linux-likely学习&quot;&gt;&lt;/a&gt;linux-likely学习&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在日常的工作和学习中，经常发现likely和unlikely的使用，在通知链节点注册时，有如下函数&lt;/p&gt;
@@ -303,7 +328,7 @@
     <link href="http://sholck.top/archives/11.html"/>
     <id>http://sholck.top/archives/11.html</id>
     <published>2022-03-30T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.818Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;动态模块加载异常&quot;&gt;&lt;a href=&quot;#动态模块加载异常&quot; class=&quot;headerlink&quot; title=&quot;动态模块加载异常&quot;&gt;&lt;/a&gt;动态模块加载异常&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;动态模块加载，出现以下异常&lt;/p&gt;
@@ -327,7 +352,7 @@
     <link href="http://sholck.top/archives/7.html"/>
     <id>http://sholck.top/archives/7.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.822Z</updated>
+    <updated>2022-12-08T15:41:22.104Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;内存泄露分析&quot;&gt;&lt;a href=&quot;#内存泄露分析&quot; class=&quot;headerlink&quot; title=&quot;内存泄露分析&quot;&gt;&lt;/a&gt;内存泄露分析&lt;/h1&gt;&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;N项目超级夜景模式泄露内存，且泄露内存较大，大概每次19M&lt;/p&gt;</summary>
@@ -354,7 +379,7 @@
     <link href="http://sholck.top/archives/10.html"/>
     <id>http://sholck.top/archives/10.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.790Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;a href=&quot;#linux内核开发学习手册-内核许可证&quot; class=&quot;headerlink&quot; title=&quot;linux内核开发学习手册-内核许可证&quot;&gt;&lt;/a&gt;linux内核开发学习手册-内核许可证&lt;/h1&gt;&lt;p&gt;原文见：内核开发文档-Linux kernel licensing rules(Linux内核许可规则)&lt;/p&gt;
@@ -381,7 +406,7 @@
     <link href="http://sholck.top/archives/9.html"/>
     <id>http://sholck.top/archives/9.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.818Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;a href=&quot;#内核开发学习手册-内核驱动接口&quot; class=&quot;headerlink&quot; title=&quot;内核开发学习手册-内核驱动接口&quot;&gt;&lt;/a&gt;内核开发学习手册-内核驱动接口&lt;/h1&gt;&lt;p&gt;针对内核，无论是开发还是用户，我们所希望的是稳定的驱动功能，而稳定的驱动和有稳定的内核接口之间的联系，需要我们去思考，有助于理解linux的开发哲学。&lt;/p&gt;
@@ -406,7 +431,7 @@
     <link href="http://sholck.top/archives/8.html"/>
     <id>http://sholck.top/archives/8.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.822Z</updated>
+    <updated>2022-12-08T15:41:22.104Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;内核补丁提交&quot;&gt;&lt;a href=&quot;#内核补丁提交&quot; class=&quot;headerlink&quot; title=&quot;内核补丁提交&quot;&gt;&lt;/a&gt;内核补丁提交&lt;/h1&gt;&lt;p&gt;本文将总结介绍提交内核补丁前的须知规范&lt;/p&gt;
@@ -438,7 +463,7 @@
     <link href="http://sholck.top/archives/5.html"/>
     <id>http://sholck.top/archives/5.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.822Z</updated>
+    <updated>2022-12-08T15:41:22.104Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;程序分析利器strace&quot;&gt;&lt;a href=&quot;#程序分析利器strace&quot; class=&quot;headerlink&quot; title=&quot;程序分析利器strace&quot;&gt;&lt;/a&gt;程序分析利器strace&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;strace可以通过捕捉记录正在运行进程的系统调用和信号来进行程序分析，既然是系统调用，因此shell脚本和应用程序都可以通过strace来调试分析。&lt;/p&gt;</summary>
@@ -465,7 +490,7 @@
     <link href="http://sholck.top/archives/4.html"/>
     <id>http://sholck.top/archives/4.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.822Z</updated>
+    <updated>2022-12-08T15:41:22.104Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;sysdump学习&quot;&gt;&lt;a href=&quot;#sysdump学习&quot; class=&quot;headerlink&quot; title=&quot;sysdump学习&quot;&gt;&lt;/a&gt;sysdump学习&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;sysdump为dump system memory，也称内核转储。在内核发生异常时，通过kexec和kdump，将内存和寄存器信息保存，在重启以后的uboot阶段将信息转储到文件中。我们能够通过转储文件发现异常发生的根本原因。&lt;/p&gt;</summary>
@@ -496,7 +521,7 @@
     <link href="http://sholck.top/archives/3.html"/>
     <id>http://sholck.top/archives/3.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.822Z</updated>
+    <updated>2022-12-08T15:41:22.104Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;程序分析利器gdb&quot;&gt;&lt;a href=&quot;#程序分析利器gdb&quot; class=&quot;headerlink&quot; title=&quot;程序分析利器gdb&quot;&gt;&lt;/a&gt;程序分析利器gdb&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;通过gdb可以分析进程在运行和crash的内部状态，根据man手册描述有以下作用&lt;/p&gt;
@@ -529,7 +554,7 @@
     <link href="http://sholck.top/archives/6.html"/>
     <id>http://sholck.top/archives/6.html</id>
     <published>2022-03-29T16:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.822Z</updated>
+    <updated>2022-12-08T15:41:22.104Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;程序分析利器perf&quot;&gt;&lt;a href=&quot;#程序分析利器perf&quot; class=&quot;headerlink&quot; title=&quot;程序分析利器perf&quot;&gt;&lt;/a&gt;程序分析利器perf&lt;/h1&gt;&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;全称为performance counter，是一个linux内核实现的框架来进行性能分析，覆盖了硬件CPU/PMU和（软件计数器，监测点）之类的特性。&lt;/p&gt;
@@ -557,7 +582,7 @@
     <link href="http://sholck.top/archives/2.html"/>
     <id>http://sholck.top/archives/2.html</id>
     <published>2021-08-10T14:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.818Z</updated>
+    <updated>2022-12-08T15:41:22.100Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;内核实践-linux5-12-0-rc8&quot;&gt;&lt;a href=&quot;#内核实践-linux5-12-0-rc8&quot; class=&quot;headerlink&quot; title=&quot;内核实践-linux5.12.0-rc8&quot;&gt;&lt;/a&gt;内核实践-linux5.12.0-rc8&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
@@ -585,40 +610,6 @@
     <category term="busybox" scheme="http://sholck.top/tags/busybox/"/>
     
     <category term="QEMU" scheme="http://sholck.top/tags/QEMU/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>生产力工具记录</title>
-    <link href="http://sholck.top/archives/1.html"/>
-    <id>http://sholck.top/archives/1.html</id>
-    <published>2021-03-09T14:00:00.000Z</published>
-    <updated>2022-06-16T18:45:45.834Z</updated>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;生产力工具记录&quot;&gt;&lt;a href=&quot;#生产力工具记录&quot; class=&quot;headerlink&quot; title=&quot;生产力工具记录&quot;&gt;&lt;/a&gt;生产力工具记录&lt;/h1&gt;&lt;p&gt;&lt;a id=&quot;0&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;下面是一些生产力工具&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;#1&quot;&gt;Hexo&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#2&quot;&gt;draw.io&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#3&quot;&gt;vim/tmux/cscope/ctags/fzf/taglist/ag&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#4&quot;&gt;HHKB types&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#5&quot;&gt;git&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#6&quot;&gt;meld&amp;amp;diffuse&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</summary>
-    
-    
-    
-    <category term="生产力工具" scheme="http://sholck.top/categories/%E7%94%9F%E4%BA%A7%E5%8A%9B%E5%B7%A5%E5%85%B7/"/>
-    
-    
-    <category term="vim" scheme="http://sholck.top/tags/vim/"/>
-    
-    <category term="hexo" scheme="http://sholck.top/tags/hexo/"/>
-    
-    <category term="draw.io" scheme="http://sholck.top/tags/draw-io/"/>
-    
-    <category term="fzf" scheme="http://sholck.top/tags/fzf/"/>
     
   </entry>
   
